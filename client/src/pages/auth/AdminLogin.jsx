@@ -59,6 +59,19 @@ export const AdminLogin = () => {
             {loading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
+
+        <div className="mt-6 pt-4 border-t border-gray-300">
+          <p className="text-center text-gray-600 text-sm">
+            Shop Manager?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/shop-login')}
+              className="text-blue-600 hover:text-blue-800 font-semibold"
+            >
+              Login here
+            </button>
+          </p>
+        </div>
       </Card>
     </div>
   );

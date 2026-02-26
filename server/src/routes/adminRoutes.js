@@ -7,5 +7,7 @@ const router = express.Router();
 
 // Admin routes
 router.get('/dashboard', authMiddleware, roleMiddleware('admin'), adminController.getDashboard);
+router.get('/shops', authMiddleware, roleMiddleware('admin'), adminController.getShops);
+router.get('/products', authMiddleware, roleMiddleware('admin'), adminController.getProducts);
 
 export default router;

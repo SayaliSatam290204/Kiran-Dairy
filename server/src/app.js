@@ -8,6 +8,7 @@ import dispatchRoutes from './routes/dispatchRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import returnRoutes from './routes/returnRoutes.js';
 import ledgerRoutes from './routes/ledgerRoutes.js';
+import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 const app = express();
 

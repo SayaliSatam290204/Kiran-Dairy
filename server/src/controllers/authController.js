@@ -22,7 +22,7 @@ export const authController = {
       }
 
       const token = jwt.sign(
-        { id: user._id, role: user.role },
+        { id: user._id, role: user.role, shopId: user.shopId },
         process.env.JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -34,7 +34,8 @@ export const authController = {
             id: user._id,
             name: user.name,
             email: user.email,
-            role: user.role
+            role: user.role,
+            shopId: user.shopId
           },
           token
         }
@@ -66,7 +67,7 @@ export const authController = {
       });
 
       const token = jwt.sign(
-        { id: user._id, role: user.role },
+        { id: user._id, role: user.role, shopId: user.shopId },
         process.env.JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -78,7 +79,8 @@ export const authController = {
             id: user._id,
             name: user.name,
             email: user.email,
-            role: user.role
+            role: user.role,
+            shopId: user.shopId
           },
           token
         }

@@ -5,7 +5,7 @@ import { authMiddleware } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // Dispatch routes
-router.get('/', authMiddleware, dispatchController.getAll || ((req, res) => res.json({ message: 'Get all dispatches' })));
+router.get('/', authMiddleware, dispatchController.getAll);
 router.post('/', authMiddleware, dispatchController.create);
 
 export default router;
