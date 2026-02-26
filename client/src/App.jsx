@@ -29,12 +29,15 @@ import './index.css';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
+          {/* Root route - redirect to admin login */}
+          <Route path="/" element={<Navigate to="/admin-login" replace />} />
+
           {/* Auth Routes */}
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/shop-login" element={<ShopLogin />} />
-          <Route path="/login" element={<AdminLogin />} />
+          <Route path="/login" element={<Navigate to="/admin-login" replace />} />
 
           {/* Admin Routes */}
           <Route

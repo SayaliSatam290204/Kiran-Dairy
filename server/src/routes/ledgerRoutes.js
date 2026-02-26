@@ -1,10 +1,10 @@
 import express from 'express';
+import { ledgerController } from '../controllers/ledgerController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Ledger routes to be implemented
-router.get('/', (req, res) => {
-  res.json({ message: 'Get ledger' });
-});
+// Ledger routes
+router.get('/', authMiddleware, ledgerController.getLedger);
 
 export default router;
