@@ -4,7 +4,7 @@ import { Skeleton } from "../../components/ui/Skeleton.jsx";
 import toast from "react-hot-toast";
 import { adminApi } from "../../api/adminApi.js";
 
-export const AdminDashboard = () => {
+export const AdminLogs = () => {
   const [stats, setStats] = useState({
     totalShops: 0,
     totalStock: 0,

@@ -3,9 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
 // Auth Pages
-import { LoginSelect } from "./pages/auth/LoginSelect.jsx";
-import { AdminLogin } from "./pages/auth/AdminLogin.jsx";
-import { ShopLogin } from "./pages/auth/ShopLogin.jsx";
+import { Login } from "./pages/auth/Login.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
@@ -44,13 +42,11 @@ function App() {
         />
 
         <Routes>
-          {/* Root -> Login Select */}
+          {/* Root -> Login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Auth */}
-          <Route path="/login" element={<LoginSelect />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/shop-login" element={<ShopLogin />} />
+          <Route path="/login" element={<Login />} />
 
           {/* Admin */}
           <Route
