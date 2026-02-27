@@ -1,49 +1,62 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext.jsx';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 // Auth Pages
-import { AdminLogin } from './pages/auth/AdminLogin.jsx';
-import { ShopLogin } from './pages/auth/ShopLogin.jsx';
+import { LoginSelect } from "./pages/auth/LoginSelect.jsx";
+import { AdminLogin } from "./pages/auth/AdminLogin.jsx";
+import { ShopLogin } from "./pages/auth/ShopLogin.jsx";
 
 // Admin Pages
-import { AdminDashboard } from './pages/admin/AdminDashboard.jsx';
-import { CreateDispatch } from './pages/admin/CreateDispatch.jsx';
-import { DispatchHistory } from './pages/admin/DispatchHistory.jsx';
-import { AdminLogs } from './pages/admin/AdminLogs.jsx';
-import { Reports } from './pages/admin/Reports.jsx';
+import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
+import { CreateDispatch } from "./pages/admin/CreateDispatch.jsx";
+import { DispatchHistory } from "./pages/admin/DispatchHistory.jsx";
+import { AdminLogs } from "./pages/admin/AdminLogs.jsx";
+import { Reports } from "./pages/admin/Reports.jsx";
 
 // Shop Pages
-import { ShopDashboard } from './pages/shop/ShopDashboard.jsx';
-import { Inventory } from './pages/shop/Inventory.jsx';
-import { POS } from './pages/shop/POS.jsx';
-import { SalesHistory } from './pages/shop/SalesHistory.jsx';
-import { Returns } from './pages/shop/Returns.jsx';
+import { ShopDashboard } from "./pages/shop/ShopDashboard.jsx";
+import { Inventory } from "./pages/shop/Inventory.jsx";
+import { POS } from "./pages/shop/POS.jsx";
+import { SalesHistory } from "./pages/shop/SalesHistory.jsx";
+import { Returns } from "./pages/shop/Returns.jsx";
 
-// Components
-import { ProtectedRoute } from './components/common/ProtectedRoute.jsx';
-import { AdminLayout } from './layouts/AdminLayout.jsx';
-import { ShopLayout } from './layouts/ShopLayout.jsx';
+// Components / Layouts
+import { ProtectedRoute } from "./components/common/ProtectedRoute.jsx";
+import { AdminLayout } from "./layouts/AdminLayout.jsx";
+import { ShopLayout } from "./layouts/ShopLayout.jsx";
 
-import './index.css';
+import "./index.css";
 
 function App() {
   return (
     <AuthProvider>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          {/* Root route - redirect to admin login */}
-          <Route path="/" element={<Navigate to="/admin-login" replace />} />
+      <Router>
+        {/* 🔥 Global Toast Notifications */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              fontSize: "14px",
+            },
+          }}
+        />
 
-          {/* Auth Routes */}
+        <Routes>
+          {/* Root -> Login Select */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Auth */}
+          <Route path="/login" element={<LoginSelect />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/shop-login" element={<ShopLogin />} />
-          <Route path="/login" element={<Navigate to="/admin-login" replace />} />
 
-          {/* Admin Routes */}
+          {/* Admin */}
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <AdminDashboard />
                 </AdminLayout>
@@ -53,7 +66,7 @@ function App() {
           <Route
             path="/admin/dispatch"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <CreateDispatch />
                 </AdminLayout>
@@ -63,7 +76,7 @@ function App() {
           <Route
             path="/admin/dispatch-history"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <DispatchHistory />
                 </AdminLayout>
@@ -73,7 +86,7 @@ function App() {
           <Route
             path="/admin/logs"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <AdminLogs />
                 </AdminLayout>
@@ -83,7 +96,7 @@ function App() {
           <Route
             path="/admin/reports"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <Reports />
                 </AdminLayout>
@@ -91,11 +104,11 @@ function App() {
             }
           />
 
-          {/* Shop Routes */}
+          {/* Shop */}
           <Route
             path="/shop/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['shop']}>
+              <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
                   <ShopDashboard />
                 </ShopLayout>
@@ -105,7 +118,7 @@ function App() {
           <Route
             path="/shop/inventory"
             element={
-              <ProtectedRoute allowedRoles={['shop']}>
+              <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
                   <Inventory />
                 </ShopLayout>
@@ -115,7 +128,7 @@ function App() {
           <Route
             path="/shop/pos"
             element={
-              <ProtectedRoute allowedRoles={['shop']}>
+              <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
                   <POS />
                 </ShopLayout>
@@ -125,7 +138,7 @@ function App() {
           <Route
             path="/shop/sales"
             element={
-              <ProtectedRoute allowedRoles={['shop']}>
+              <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
                   <SalesHistory />
                 </ShopLayout>
@@ -135,7 +148,7 @@ function App() {
           <Route
             path="/shop/returns"
             element={
-              <ProtectedRoute allowedRoles={['shop']}>
+              <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
                   <Returns />
                 </ShopLayout>
@@ -143,9 +156,29 @@ function App() {
             }
           />
 
-          {/* Fallback */}
-          <Route path="/" element={<Navigate to="/admin-login" replace />} />
-          <Route path="*" element={<div className="p-6 text-center">404 - Page Not Found</div>} />
+          <Route
+          path="/unauthorized"
+          element={
+          <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+            <div className="bg-white border rounded-xl p-8 text-center max-w-md w-full">
+              <h2 className="text-xl font-bold mb-2">Unauthorized</h2>
+              <p className="text-gray-600 mb-4">You don’t have access to this page.</p>
+              <button
+              onClick={() => window.history.back()}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Go Back
+                </button>
+                </div>
+                </div>
+              }
+              />
+          
+          {/* 404 */}
+          <Route
+            path="*"
+            element={<div className="p-6 text-center">404 - Page Not Found</div>}
+          />
         </Routes>
       </Router>
     </AuthProvider>

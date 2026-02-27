@@ -6,8 +6,8 @@ import { Card } from '../../components/ui/Card.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 
-export const AdminLogin = () => {
-  const [email, setEmail] = useState('admin@kiran-dairy.com');
+export const ShopLogin = () => {
+  const [email, setEmail] = useState('shop1@kiran-dairy.com');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export const AdminLogin = () => {
       const response = await authApi.login({ email, password });
       const { token, user } = response.data.data;
       login(user, token);
-      navigate('/admin/dashboard');
+      navigate('/shop/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
@@ -33,14 +33,14 @@ export const AdminLogin = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-96" title="Admin Login">
+      <Card className="w-96" title="Shop Login">
         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Email"
             type="email"
-            placeholder="admin@example.com"
+            placeholder="shop@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -62,10 +62,10 @@ export const AdminLogin = () => {
 
         <div className="mt-6 pt-4 border-t border-gray-300">
           <p className="text-center text-gray-600 text-sm">
-            Shop Manager?{' '}
+            Admin?{' '}
             <button
               type="button"
-              onClick={() => navigate('/shop-login')}
+              onClick={() => navigate('/admin-login')}
               className="text-blue-600 hover:text-blue-800 font-semibold"
             >
               Login here

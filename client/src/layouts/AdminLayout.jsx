@@ -1,7 +1,7 @@
 import { Navbar } from '../components/common/Navbar.jsx';
 import { Sidebar } from '../components/common/Sidebar.jsx';
 
-export const AdminLayout = ({ children }) => {
+export const ShopLayout = ({ children }) => {
   return (
     <div>
       <Navbar />

@@ -1,50 +1,59 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth.js';
+// src/components/common/Sidebar.jsx
+import { NavLink } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth.js";
+
+const linkBase =
+  "block px-3 py-2 rounded-md font-medium transition";
+
+const linkClass = ({ isActive }) =>
+  `${linkBase} ${
+    isActive ? "bg-blue-600 text-white" : "text-blue-700 hover:bg-blue-50"
+  }`;
 
 export const Sidebar = () => {
   const { user } = useAuth();
 
   return (
-    <aside className="bg-gray-100 w-64 p-6 min-h-screen">
-      <h2 className="text-xl font-bold mb-6">Menu</h2>
-      
-      {user?.role === 'admin' && (
-        <div className="space-y-4">
-          <Link to="/admin/dashboard" className="block text-blue-600 hover:text-blue-800">
+    <aside className="bg-white w-64 border-r h-full p-4">
+      <h2 className="text-lg font-bold mb-4 text-gray-900">Menu</h2>
+
+      {user?.role === "admin" && (
+        <div className="space-y-2">
+          <NavLink to="/admin/dashboard" className={linkClass}>
             Dashboard
-          </Link>
-          <Link to="/admin/dispatch" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/admin/dispatch" className={linkClass}>
             Create Dispatch
-          </Link>
-          <Link to="/admin/dispatch-history" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/admin/dispatch-history" className={linkClass}>
             Dispatch History
-          </Link>
-          <Link to="/admin/logs" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/admin/logs" className={linkClass}>
             Stock Ledger
-          </Link>
-          <Link to="/admin/reports" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/admin/reports" className={linkClass}>
             Reports
-          </Link>
+          </NavLink>
         </div>
       )}
 
-      {user?.role === 'shop' && (
-        <div className="space-y-4">
-          <Link to="/shop/dashboard" className="block text-blue-600 hover:text-blue-800">
+      {user?.role === "shop" && (
+        <div className="space-y-2">
+          <NavLink to="/shop/dashboard" className={linkClass}>
             Dashboard
-          </Link>
-          <Link to="/shop/inventory" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/shop/inventory" className={linkClass}>
             Inventory
-          </Link>
-          <Link to="/shop/pos" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/shop/pos" className={linkClass}>
             POS Billing
-          </Link>
-          <Link to="/shop/sales" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/shop/sales" className={linkClass}>
             Sales History
-          </Link>
-          <Link to="/shop/returns" className="block text-blue-600 hover:text-blue-800">
+          </NavLink>
+          <NavLink to="/shop/returns" className={linkClass}>
             Returns
-          </Link>
+          </NavLink>
         </div>
       )}
     </aside>
