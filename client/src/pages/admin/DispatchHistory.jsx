@@ -35,11 +35,30 @@ export const DispatchHistory = () => {
       label: "Status",
       render: (val) => {
         const s = String(val || "").toLowerCase();
-        const v = s === "completed" ? "green" : s === "pending" ? "blue" : "gray";
-        return <Badge variant={v}>{String(val || "-")}</Badge>;
+        let variant = "gray";
+        if (s === "received") variant = "green";
+        else if (s === "dispatched") variant = "blue";
+        else if (s === "pending") variant = "yellow";
+        else if (s === "created") variant = "gray";
+        return <Badge variant={variant}>{String(val || "-").toUpperCase()}</Badge>;
       },
     },
-    { key: "dispatchDate", label: "Date", render: (val) => formatDate(val) },
+    { key: "dispatchDate", label: "Dispatched", render: (val) => formatDate(val) },
+    {
+      key: "receivedDate",
+      label: "Received",
+      render: (val) => val ? formatDate(val) : "-"
+    },
+    {
+      key: "confirmedBy",
+      label: "Confirmed By",
+      render: (val, row) => {
+        if (row.status === "received" && row.confirmedBy?.name) {
+          return `${row.confirmedBy.name}`;
+        }
+        return "-";
+      }
+    }
   ];
 
   return (

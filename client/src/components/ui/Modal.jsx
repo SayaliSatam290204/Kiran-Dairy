@@ -8,10 +8,10 @@ export const Modal = ({ isOpen, title, onClose, children }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg border"
+        className="bg-white rounded-xl max-w-md w-full shadow-lg border flex flex-col max-h-[calc(100vh-100px)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 p-6 border-b">
           <h2 className="text-lg font-bold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
@@ -21,7 +21,9 @@ export const Modal = ({ isOpen, title, onClose, children }) => {
             ×
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto p-6">
+          {children}
+        </div>
       </div>
     </div>
   );

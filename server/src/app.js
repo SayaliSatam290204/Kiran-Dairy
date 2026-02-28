@@ -8,6 +8,8 @@ import dispatchRoutes from './routes/dispatchRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import returnRoutes from './routes/returnRoutes.js';
 import ledgerRoutes from './routes/ledgerRoutes.js';
+import staffRoutes from './routes/staffRoutes.js';
+import staffPaymentRoutes from './routes/staffPaymentRoutes.js';
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -25,6 +27,8 @@ app.use('/api/dispatch', dispatchRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/return', returnRoutes);
 app.use('/api/ledger', ledgerRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/staff-payment', staffPaymentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

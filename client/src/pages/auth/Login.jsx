@@ -11,9 +11,9 @@ export const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // State management
   const [selectedRole, setSelectedRole] = useState(null);
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,20 +21,26 @@ export const Login = () => {
 
   const isDev = import.meta?.env?.DEV;
 
-  // Pre-fill credentials in development mode
-  const preFilledEmail = isDev ? "shop1@kiran-dairy.com" : "";
-  const preFilledPassword = isDev ? "admin123" : "";
-
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
-    setEmail(preFilledEmail);
-    setPassword(preFilledPassword);
+
+    if (isDev) {
+      if (role === "admin") {
+        setEmail("admin@kiran-dairy.com");
+        setPassword("admin123");
+      } else {
+        setPhone("9876543210");
+        setPassword("9876543210");
+      }
+    }
+
     setError("");
   };
 
   const handleBackToRoleSelect = () => {
     setSelectedRole(null);
     setEmail("");
+    setPhone("");
     setPassword("");
     setError("");
     setShowPassword(false);
@@ -48,12 +54,18 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const response = await authApi.login({ email, password });
+      const response = await authApi.login({
+        email: selectedRole === "admin" ? email : undefined,
+        phone: selectedRole === "shop" ? phone : undefined,
+        password
+      });
+
       const { token, user } = response.data.data;
 
-      // Verify the user role matches the selected role
       if (user.role !== selectedRole) {
-        setError(`This account is not a ${selectedRole} account. Please use the correct credentials.`);
+        setError(
+          `This account is not a ${selectedRole} account. Please use the correct credentials.`
+        );
         toast.error(`Account role mismatch. Expected ${selectedRole}, got ${user.role}`);
         setLoading(false);
         return;
@@ -61,9 +73,12 @@ export const Login = () => {
 
       login(user, token);
 
-      // Navigate based on role
-      const dashboardRoute = selectedRole === "admin" ? "/admin/dashboard" : "/shop/dashboard";
-      toast.success(`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} login successful!`);
+      const dashboardRoute =
+        selectedRole === "admin" ? "/admin/dashboard" : "/shop/dashboard";
+
+      toast.success(
+        `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} login successful!`
+      );
       navigate(dashboardRoute);
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";
@@ -79,24 +94,24 @@ export const Login = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow p-8">
-          <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">Kiran Dairy</h1>
-          <p className="text-center text-gray-600 mb-8">
-            Choose your role to continue
-          </p>
+          <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
+            Kiran Dairy
+          </h1>
+          <p className="text-center text-gray-600 mb-8">Choose your role to continue</p>
 
           <div className="space-y-3">
             <button
               onClick={() => handleRoleSelect("admin")}
               className="w-full text-center bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
             >
-              <span className="block">👤 Login as Admin</span>
+              <span className="block">▲ Login as Admin</span>
             </button>
 
             <button
               onClick={() => handleRoleSelect("shop")}
               className="w-full text-center bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold"
             >
-              <span className="block">🛒 Login as Shop</span>
+              <span className="block">Login as Shop</span>
             </button>
           </div>
         </div>
@@ -107,8 +122,10 @@ export const Login = () => {
   // Login Form View
   const textColor = selectedRole === "admin" ? "blue" : "green";
   const bgColor = selectedRole === "admin" ? "bg-blue-50" : "bg-green-50";
-  const borderColor = selectedRole === "admin" ? "border-blue-300" : "border-green-300";
-  const buttonColor = selectedRole === "admin" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700";
+  const buttonColor =
+    selectedRole === "admin"
+      ? "bg-blue-600 hover:bg-blue-700"
+      : "bg-green-600 hover:bg-green-700";
 
   return (
     <div className={`flex items-center justify-center min-h-screen ${bgColor}`}>
@@ -123,15 +140,33 @@ export const Login = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            placeholder="your-email@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={loading}
-          />
+          {selectedRole === "admin" ? (
+            <Input
+              label="Email"
+              type="email"
+              placeholder="your-email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+            />
+          ) : (
+            <Input
+              label="Phone Number"
+              type="tel"
+              placeholder="10-digit phone number"
+              value={phone}
+              onChange={(e) => {
+                const v = e.target.value;
+                setPhone(v);
+
+                // optional: keep password same as phone unless user changed it
+                setPassword((prev) => (prev === "" || prev === phone ? v : prev));
+              }}
+              required
+              disabled={loading}
+            />
+          )}
 
           <div className="space-y-2">
             <Input

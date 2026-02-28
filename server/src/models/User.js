@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -6,26 +6,43 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+
+    // ✅ Admin uses email, Shop can have email null
     email: {
       type: String,
-      required: true,
-      unique: true
+      unique: true,
+      sparse: true, // ✅ allows multiple null emails
+      trim: true,
+      default: null
     },
+
+    // ✅ Shop uses phone as username
+    phone: {
+      type: String,
+      unique: true,
+      sparse: true, // ✅ allows multiple null phones
+      trim: true,
+      default: null
+    },
+
     password: {
       type: String,
       required: true,
       select: false
     },
+
     role: {
       type: String,
-      enum: ['admin', 'shop'],
-      default: 'shop'
+      enum: ["admin", "shop"],
+      default: "shop"
     },
+
     shopId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Shop',
+      ref: "Shop",
       default: null
     },
+
     isActive: {
       type: Boolean,
       default: true
@@ -34,4 +51,4 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model('User', userSchema);
+export default mongoose.model("User", userSchema);

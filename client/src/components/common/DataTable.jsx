@@ -7,6 +7,8 @@ import { useMemo, useState } from "react";
  * onRowClick?: (row) => void
  * searchableKeys?: ["name","email"]  (default: all column keys)
  * pageSizeOptions?: [5,10,20,50]
+ * keyField?: "id"  (unique identifier field for key prop)
+ * isLoading?: false  (shows loading state)
  */
 export const DataTable = ({
   columns = [],
@@ -16,6 +18,8 @@ export const DataTable = ({
   pageSizeOptions = [5, 10, 20, 50],
   initialPageSize = 10,
   emptyState,
+  keyField = "id",
+  isLoading = false,
 }) => {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState(null);
@@ -37,6 +41,8 @@ export const DataTable = ({
       keysToSearch.some((k) => {
         const v = row?.[k];
         if (v === null || v === undefined) return false;
+        // Skip objects and arrays in search
+        if (typeof v === 'object') return false;
         return String(v).toLowerCase().includes(q);
       })
     );
@@ -86,6 +92,18 @@ export const DataTable = ({
     }
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="border rounded-lg bg-white p-10 text-center">
+        <div className="text-gray-600">
+          <div className="inline-block animate-spin">...</div>
+          <div className="text-lg font-semibold mt-2">Loading data...</div>
+        </div>
+      </div>
+    );
+  }
 
   // Empty state
   if (!data || data.length === 0) {

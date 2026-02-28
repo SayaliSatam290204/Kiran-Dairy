@@ -7,10 +7,15 @@ import { Login } from "./pages/auth/Login.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
-import { CreateDispatch } from "./pages/admin/CreateDispatch.jsx";
+import { BatchDispatch } from "./pages/admin/BatchDispatch.jsx";
 import { DispatchHistory } from "./pages/admin/DispatchHistory.jsx";
+import { DispatchAnalytics } from "./pages/admin/DispatchAnalytics.jsx";
 import { AdminLogs } from "./pages/admin/AdminLogs.jsx";
 import { Reports } from "./pages/admin/Reports.jsx";
+import { Staff } from "./pages/admin/Staff.jsx";
+import { StaffPayment } from "./pages/admin/StaffPayment.jsx";
+import { Returns as AdminReturns } from "./pages/admin/Returns.jsx";
+import { Shops } from "./pages/admin/Shops.jsx";
 
 // Shop Pages
 import { ShopDashboard } from "./pages/shop/ShopDashboard.jsx";
@@ -18,6 +23,9 @@ import { Inventory } from "./pages/shop/Inventory.jsx";
 import { POS } from "./pages/shop/POS.jsx";
 import { SalesHistory } from "./pages/shop/SalesHistory.jsx";
 import { Returns } from "./pages/shop/Returns.jsx";
+import { ShopStaff } from "./pages/shop/Staff.jsx";
+import { ShopPayment } from "./pages/shop/Payment.jsx";
+import { DispatchConfirmation } from "./pages/shop/DispatchConfirmation.jsx";
 
 // Components / Layouts
 import { ProtectedRoute } from "./components/common/ProtectedRoute.jsx";
@@ -29,8 +37,8 @@ import "./index.css";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        {/* 🔥 Global Toast Notifications */}
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        {/* Global Toast Notifications */}
         <Toaster
           position="top-right"
           toastOptions={{
@@ -64,7 +72,7 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
-                  <CreateDispatch />
+                  <BatchDispatch />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -75,6 +83,16 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <DispatchHistory />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dispatch-analytics"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <DispatchAnalytics />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -95,6 +113,46 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <Reports />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/staff"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <Staff />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/staff-payment"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <StaffPayment />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/returns"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <AdminReturns />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/shops"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <Shops />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -147,6 +205,36 @@ function App() {
               <ProtectedRoute allowedRoles={["shop"]}>
                 <ShopLayout>
                   <Returns />
+                </ShopLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shop/staff"
+            element={
+              <ProtectedRoute allowedRoles={["shop"]}>
+                <ShopLayout>
+                  <ShopStaff />
+                </ShopLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shop/payment"
+            element={
+              <ProtectedRoute allowedRoles={["shop"]}>
+                <ShopLayout>
+                  <ShopPayment />
+                </ShopLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shop/dispatch"
+            element={
+              <ProtectedRoute allowedRoles={["shop"]}>
+                <ShopLayout>
+                  <DispatchConfirmation />
                 </ShopLayout>
               </ProtectedRoute>
             }

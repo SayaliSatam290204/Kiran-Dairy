@@ -1,5 +1,278 @@
+import Return from "../models/Return.js";
+import Sale from "../models/Sale.js";
+import { inventoryService } from "../services/inventoryService.js";
+import { responseHelper } from "../utils/responseHelper.js";
+import mongoose from "mongoose";
+
+// Helper function to generate return number
+const generateReturnNo = async () => {
+  const lastReturn = await Return.findOne().sort({ createdAt: -1 });
+  const lastNo = lastReturn?.returnNo?.split("/")[1] || 0;
+  const newNo = parseInt(lastNo) + 1;
+  return `RET/${newNo.toString().padStart(6, "0")}`;
+};
+
 export const returnController = {
-  create: (req, res) => {
-    res.json({ message: 'Return create controller to be implemented' });
+  // Get all returns
+  getAll: async (req, res) => {
+    try {
+      const { shopId, status } = req.query;
+      const userRole = req.user.role;
+
+      let query = {};
+
+      // Shop can only see their returns
+      if (userRole === "shop") {
+        query.shopId = req.user.shopId;
+      } else if (shopId) {
+        query.shopId = new mongoose.Types.ObjectId(shopId);
+      }
+
+      if (status) query.status = status;
+
+      const returns = await Return.find(query)
+        .populate("saleId", "billNo")
+        .populate("shopId", "name location")
+        .populate("items.productId", "name category")
+        .sort({ returnDate: -1 });
+
+      return responseHelper.success(res, returns, "Returns retrieved successfully");
+    } catch (error) {
+      console.error("Error fetching returns:", error);
+      return responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  // Get return by ID
+  getById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userRole = req.user.role;
+
+      const returnRecord = await Return.findById(id)
+        .populate("saleId", "billNo items totalAmount")
+        .populate("shopId", "name location")
+        .populate("items.productId", "name category price");
+
+      if (!returnRecord) {
+        return responseHelper.error(res, "Return not found", 404);
+      }
+
+      // Shop can only view own returns
+      if (
+        userRole === "shop" &&
+        returnRecord.shopId._id.toString() !== req.user.shopId.toString()
+      ) {
+        return responseHelper.error(res, "Unauthorized access", 403);
+      }
+
+      return responseHelper.success(res, returnRecord, "Return retrieved successfully");
+    } catch (error) {
+      console.error("Error fetching return:", error);
+      return responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  // ✅ Create a return (shop -> pending)  [NO inventory update here]
+  create: async (req, res) => {
+    try {
+      const { saleId, items } = req.body;
+      const userRole = req.user.role;
+      const shopId = userRole === "shop" ? req.user.shopId : req.body.shopId;
+
+      if (!saleId || !items || items.length === 0) {
+        return responseHelper.error(res, "Sale ID and items are required", 400);
+      }
+
+      // Verify sale exists
+      const sale = await Sale.findById(saleId);
+      if (!sale) return responseHelper.error(res, "Sale not found", 404);
+
+      // Shop can only return its own sale
+      if (userRole === "shop" && sale.shopId.toString() !== shopId.toString()) {
+        return responseHelper.error(res, "Unauthorized access", 403);
+      }
+
+      // Validate each item has productId, quantity, reason
+      for (const it of items) {
+        if (!it.productId || !it.quantity || it.quantity <= 0 || !it.reason) {
+          return responseHelper.error(
+            res,
+            "Each item must have productId, quantity, and reason",
+            400
+          );
+        }
+      }
+
+      // Calculate total refund from sale items
+      let totalRefund = 0;
+      for (const item of items) {
+        const saleItem = sale.items.find(
+          (si) => si.productId.toString() === item.productId.toString()
+        );
+        if (!saleItem) {
+          return responseHelper.error(res, "Returned item not found in the sale", 400);
+        }
+        totalRefund += (saleItem.price || 0) * item.quantity;
+      }
+
+      const returnNo = await generateReturnNo();
+
+      const newReturn = await Return.create({
+        returnNo,
+        saleId,
+        shopId,
+        items,
+        totalRefund,
+        status: "pending",
+        returnDate: new Date()
+      });
+
+      await newReturn.populate("saleId", "billNo");
+      await newReturn.populate("shopId", "name location");
+      await newReturn.populate("items.productId", "name category");
+
+      // ✅ IMPORTANT: do NOT update inventory here
+      return responseHelper.success(
+        res,
+        newReturn,
+        "Return request submitted (pending admin approval)",
+        201
+      );
+    } catch (error) {
+      console.error("Error creating return:", error);
+      return responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  // ✅ Update return status (admin only)
+  updateStatus: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const userRole = req.user.role;
+
+      if (userRole !== "admin") {
+        return responseHelper.error(res, "Only admin can update return status", 403);
+      }
+
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return responseHelper.error(res, "Invalid status", 400);
+      }
+
+      const returnRecord = await Return.findById(id);
+      if (!returnRecord) {
+        return responseHelper.error(res, "Return not found", 404);
+      }
+
+      const previousStatus = returnRecord.status;
+
+      // ✅ BLOCK repeated updates
+      if (previousStatus === status) {
+        return responseHelper.success(res, returnRecord, "Return already in this status");
+      }
+
+      // ✅ BLOCK rejected -> approved
+      if (previousStatus === "rejected" && status === "approved") {
+        return responseHelper.error(
+          res,
+          "Cannot approve a rejected return. Create a new return instead.",
+          400
+        );
+      }
+
+      // Apply new status
+      returnRecord.status = status;
+
+      // ✅ Inventory updates ONLY on admin approval
+      if (previousStatus === "pending" && status === "approved") {
+        for (const item of returnRecord.items) {
+          // Increase inventory because return approved
+          await inventoryService.updateInventory(
+            returnRecord.shopId,
+            item.productId,
+            item.quantity,
+            "return_in",
+            returnRecord._id.toString()
+          );
+        }
+      }
+
+      // If admin changes approved -> rejected, reverse inventory
+      if (previousStatus === "approved" && status === "rejected") {
+        for (const item of returnRecord.items) {
+          await inventoryService.updateInventory(
+            returnRecord.shopId,
+            item.productId,
+            -item.quantity,
+            "adjustment",
+            returnRecord._id.toString()
+          );
+        }
+      }
+
+      await returnRecord.save();
+
+      await returnRecord.populate("saleId", "billNo");
+      await returnRecord.populate("shopId", "name location");
+      await returnRecord.populate("items.productId", "name category");
+
+      return responseHelper.success(res, returnRecord, "Return status updated successfully");
+    } catch (error) {
+      console.error("Error updating return:", error);
+      return responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  // Delete return (pending only)
+  deleteReturn: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userRole = req.user.role;
+
+      const returnRecord = await Return.findById(id);
+      if (!returnRecord) {
+        return responseHelper.error(res, "Return not found", 404);
+      }
+
+      // Shop can only delete own returns
+      if (userRole === "shop" && returnRecord.shopId.toString() !== req.user.shopId.toString()) {
+        return responseHelper.error(res, "Unauthorized access", 403);
+      }
+
+      // Only pending can be deleted
+      if (returnRecord.status !== "pending") {
+        return responseHelper.error(res, "Can only delete pending returns", 400);
+      }
+
+      // ✅ No inventory was updated in pending stage, so no reverse needed now
+      await Return.findByIdAndDelete(id);
+
+      return responseHelper.success(res, null, "Return deleted successfully");
+    } catch (error) {
+      console.error("Error deleting return:", error);
+      return responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  // Pending count (admin notifications)
+  getPendingCount: async (req, res) => {
+    try {
+      const pendingCount = await Return.countDocuments({ status: "pending" });
+      const pendingReturns = await Return.find({ status: "pending" })
+        .populate("shopId", "name")
+        .populate("items.productId", "name")
+        .sort({ returnDate: -1 })
+        .limit(5);
+
+      return responseHelper.success(
+        res,
+        { count: pendingCount, recentReturns: pendingReturns },
+        "Pending returns retrieved successfully"
+      );
+    } catch (error) {
+      console.error("Error fetching pending returns:", error);
+      return responseHelper.error(res, error.message, 500);
+    }
   }
 };

@@ -16,7 +16,9 @@ const shopSchema = new mongoose.Schema(
     },
     contactNo: {
       type: String,
-      required: true
+      required: true,
+      unique: true,
+      trim: true
     },
     email: {
       type: String,

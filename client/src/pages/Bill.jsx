@@ -11,7 +11,7 @@ export const Bill = ({ billData }) => {
     );
   }
 
-  // ✅ Safe total calc (works even if subtotal is missing)
+  // Safe total calc (works even if subtotal is missing)
   const items = billData.items || [];
   const total = items.reduce((sum, item) => {
     const subtotal =

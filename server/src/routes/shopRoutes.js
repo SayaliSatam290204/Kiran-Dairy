@@ -6,5 +6,8 @@ const router = express.Router();
 
 // Shop routes
 router.get('/dashboard', authMiddleware, shopController.getDashboard);
+router.get('/inventory', authMiddleware, shopController.getInventory);
+router.get('/received-dispatches', authMiddleware, shopController.getReceivedDispatches);
+router.get('/staff-performance', authMiddleware, shopController.getStaffPerformance);
 
 export default router;

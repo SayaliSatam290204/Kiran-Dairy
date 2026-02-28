@@ -12,6 +12,16 @@ const saleSchema = new mongoose.Schema(
       ref: 'Shop',
       required: true
     },
+    staffId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Staff',
+      default: null
+    },
+    shift: {
+      type: String,
+      enum: ['morning', 'evening'],
+      default: 'morning'
+    },
     items: [
       {
         productId: {

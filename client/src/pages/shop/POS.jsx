@@ -8,7 +8,7 @@ import { Skeleton } from "../../components/ui/Skeleton.jsx";
 import { shopApi } from "../../api/shopApi.js";
 import { salesApi } from "../../api/salesApi.js";
 import { formatCurrency } from "../../utils/formatCurrency.js";
-import { Bill } from "../Bill.jsx"; // ✅ correct path: src/pages/Bill.jsx
+import { Bill } from "../Bill.jsx"; // correct path: src/pages/Bill.jsx
 
 export const POS = () => {
   const [products, setProducts] = useState([]);
@@ -26,6 +26,16 @@ export const POS = () => {
   // bill preview after sale
   const [billOpen, setBillOpen] = useState(false);
   const [saleData, setSaleData] = useState(null);
+
+  // Function to refresh products after sale
+  const refreshProducts = async () => {
+    try {
+      const response = await shopApi.getInventory();
+      setProducts(response.data.data || []);
+    } catch (error) {
+      console.error("Failed to refresh products:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -142,7 +152,7 @@ export const POS = () => {
 
       toast.success("Sale completed!");
 
-      // ✅ Normalize bill data so Bill.jsx always works
+      // Normalize bill data so Bill.jsx always works
       const sale = res.data?.data || payload;
 
       const normalized = {
@@ -165,6 +175,9 @@ export const POS = () => {
       setCart([]);
       setIsCheckoutOpen(false);
       setPaymentMethod("cash");
+
+      // Refresh products to show updated quantities
+      await refreshProducts();
 
       // open bill preview
       setBillOpen(true);

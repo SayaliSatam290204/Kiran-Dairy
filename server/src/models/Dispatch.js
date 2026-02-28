@@ -12,6 +12,17 @@ const dispatchSchema = new mongoose.Schema(
       ref: 'Shop',
       required: true
     },
+    // Support for batch dispatches - track multiple dispatch items in one record
+    shopIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Shop'
+      }
+    ],
+    isBatchDispatch: {
+      type: Boolean,
+      default: false
+    },
     items: [
       {
         productId: {
@@ -39,13 +50,32 @@ const dispatchSchema = new mongoose.Schema(
       type: Date,
       default: Date.now
     },
+    dispatchedDate: {
+      type: Date,
+      default: null
+    },
     receivedDate: {
       type: Date,
+      default: null
+    },
+    deliveryTime: {
+      // Time taken to deliver in hours
+      type: Number,
       default: null
     },
     notes: {
       type: String,
       default: ''
+    },
+    receivedNotes: {
+      type: String,
+      default: ''
+    },
+    confirmedBy: {
+      // Staff member who confirmed receipt
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Staff',
+      default: null
     }
   },
   { timestamps: true }

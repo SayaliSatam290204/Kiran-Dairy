@@ -30,6 +30,7 @@ export const Returns = () => {
 
   const columns = [
     { key: "returnNo", label: "Return No" },
+
     {
       key: "status",
       label: "Status",
@@ -37,10 +38,46 @@ export const Returns = () => {
         const s = String(val || "").toLowerCase();
         const v = s === "approved" ? "green" : s === "rejected" ? "red" : "blue";
         return <Badge variant={v}>{String(val || "-")}</Badge>;
-      },
+      }
     },
-    { key: "totalRefund", label: "Refund", render: (val) => formatCurrency(val || 0) },
-    { key: "returnDate", label: "Date", render: (val) => formatDate(val) },
+
+    {
+      key: "items",
+      label: "Items",
+      render: (items) => (Array.isArray(items) ? items.length : 0)
+    },
+
+    {
+      key: "items",
+      label: "Products",
+      render: (items) =>
+        Array.isArray(items) && items.length
+          ? items
+              .map((it) => `${it?.productId?.name || "Product"} x${it.quantity}`)
+              .join(" | ")
+          : "—"
+    },
+
+    {
+      key: "items",
+      label: "Reasons",
+      render: (items) =>
+        Array.isArray(items) && items.length
+          ? items.map((it) => it.reason).filter(Boolean).join(", ")
+          : "—"
+    },
+
+    {
+      key: "totalRefund",
+      label: "Refund",
+      render: (val) => formatCurrency(val || 0)
+    },
+
+    {
+      key: "returnDate",
+      label: "Date",
+      render: (val) => formatDate(val)
+    }
   ];
 
   return (
