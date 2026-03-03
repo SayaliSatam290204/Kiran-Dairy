@@ -1,5 +1,6 @@
 import Return from "../models/Return.js";
 import Sale from "../models/Sale.js";
+import Product from "../models/Product.js";
 import { inventoryService } from "../services/inventoryService.js";
 import { responseHelper } from "../utils/responseHelper.js";
 import mongoose from "mongoose";
@@ -80,17 +81,8 @@ export const returnController = {
       const userRole = req.user.role;
       const shopId = userRole === "shop" ? req.user.shopId : req.body.shopId;
 
-      if (!saleId || !items || items.length === 0) {
-        return responseHelper.error(res, "Sale ID and items are required", 400);
-      }
-
-      // Verify sale exists
-      const sale = await Sale.findById(saleId);
-      if (!sale) return responseHelper.error(res, "Sale not found", 404);
-
-      // Shop can only return its own sale
-      if (userRole === "shop" && sale.shopId.toString() !== shopId.toString()) {
-        return responseHelper.error(res, "Unauthorized access", 403);
+      if (!items || items.length === 0) {
+        return responseHelper.error(res, "Items are required", 400);
       }
 
       // Validate each item has productId, quantity, reason
@@ -102,25 +94,55 @@ export const returnController = {
             400
           );
         }
+
+        // Validate reason is one of allowed reasons
+        if (!['damaged', 'expired', 'excess'].includes(it.reason)) {
+          return responseHelper.error(
+            res,
+            "Invalid reason. Must be: damaged, expired, or excess",
+            400
+          );
+        }
       }
 
-      // Calculate total refund from sale items
       let totalRefund = 0;
-      for (const item of items) {
-        const saleItem = sale.items.find(
-          (si) => si.productId.toString() === item.productId.toString()
-        );
-        if (!saleItem) {
-          return responseHelper.error(res, "Returned item not found in the sale", 400);
+
+      // ✅ If saleId provided: calculate from sale
+      if (saleId) {
+        const sale = await Sale.findById(saleId);
+        if (!sale) return responseHelper.error(res, "Sale not found", 404);
+
+        // Shop can only return its own sale
+        if (userRole === "shop" && sale.shopId.toString() !== shopId.toString()) {
+          return responseHelper.error(res, "Unauthorized access", 403);
         }
-        totalRefund += (saleItem.price || 0) * item.quantity;
+
+        // Calculate total refund from sale items
+        for (const item of items) {
+          const saleItem = sale.items.find(
+            (si) => si.productId.toString() === item.productId.toString()
+          );
+          if (!saleItem) {
+            return responseHelper.error(res, "Returned item not found in the sale", 400);
+          }
+          totalRefund += (saleItem.price || 0) * item.quantity;
+        }
+      } else {
+        // ✅ No sale: use current product prices
+        for (const item of items) {
+          const product = await Product.findById(item.productId);
+          if (!product) {
+            return responseHelper.error(res, `Product not found: ${item.productId}`, 404);
+          }
+          totalRefund += (product.price || 0) * item.quantity;
+        }
       }
 
       const returnNo = await generateReturnNo();
 
       const newReturn = await Return.create({
         returnNo,
-        saleId,
+        saleId: saleId || null,
         shopId,
         items,
         totalRefund,
@@ -186,6 +208,9 @@ export const returnController = {
 
       // ✅ Inventory updates ONLY on admin approval
       if (previousStatus === "pending" && status === "approved") {
+        returnRecord.approvedDate = new Date();
+        returnRecord.approvedBy = req.user.id;
+
         for (const item of returnRecord.items) {
           // Increase inventory because return approved
           await inventoryService.updateInventory(
@@ -196,6 +221,11 @@ export const returnController = {
             returnRecord._id.toString()
           );
         }
+      }
+
+      // If rejecting, store rejection reason
+      if (status === "rejected" && req.body.rejectionReason) {
+        returnRecord.rejectionReason = req.body.rejectionReason;
       }
 
       // If admin changes approved -> rejected, reverse inventory

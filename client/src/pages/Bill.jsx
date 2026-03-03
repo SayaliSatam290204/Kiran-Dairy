@@ -77,14 +77,40 @@ export const Bill = ({ billData }) => {
 
       <hr className="my-4" />
 
-      <div className="flex justify-between font-bold text-lg mb-2">
+      <div className="flex justify-between font-bold text-lg mb-4">
         <span>Total:</span>
         <span>{formatCurrency(total)}</span>
       </div>
 
-      <p className="text-center text-sm text-gray-600">
-        Payment: <span className="font-semibold">{String(billData.paymentMethod || "-").toUpperCase()}</span>
-      </p>
+      <div className="bg-gray-50 p-3 rounded mb-4">
+        {billData.paymentMethod === "split" && billData.paymentDetails ? (
+          <div>
+            <p className="text-sm font-semibold mb-2">Payment Breakdown:</p>
+            {billData.paymentDetails.upi && (
+              <p className="text-xs text-gray-700 mb-1">
+                UPI ({billData.paymentDetails.upi.provider?.toUpperCase() || 'UPI'}): {formatCurrency(billData.paymentDetails.upi.amount || 0)}
+              </p>
+            )}
+            {billData.paymentDetails.cash && (
+              <p className="text-xs text-gray-700 mb-1">
+                Cash: {formatCurrency(billData.paymentDetails.cash.amount || 0)}
+              </p>
+            )}
+            {billData.paymentDetails.card && (
+              <p className="text-xs text-gray-700 mb-1">
+                Card: {formatCurrency(billData.paymentDetails.card.amount || 0)}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm">
+            <span className="font-semibold">Payment Method:</span> {billData.paymentMethod?.toUpperCase() || "-"}
+            {billData.paymentDetails?.upi?.provider && (
+              <span> ({billData.paymentDetails.upi.provider.toUpperCase()})</span>
+            )}
+          </p>
+        )}
+      </div>
 
       <hr className="my-4" />
 

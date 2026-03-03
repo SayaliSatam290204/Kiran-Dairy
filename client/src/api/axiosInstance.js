@@ -21,8 +21,16 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.log('401 Unauthorized - clearing auth session');
+      
+      // Clear auth data from localStorage
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      
+      // Small delay to ensure event listeners are ready
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 200);
     }
     return Promise.reject(error);
   }

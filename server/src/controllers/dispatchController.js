@@ -69,6 +69,7 @@ export const dispatchController = {
         .populate('shopId', 'name location')
         .populate('shopIds', 'name location')
         .populate('items.productId', 'name sku')
+        .populate('confirmedBy', 'name')
         .sort({ createdAt: -1 })
         .limit(100);
       

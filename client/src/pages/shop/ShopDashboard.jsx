@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import {
+  FaBox,
+  FaShoppingCart,
+  FaRupeeSign,
+  FaUndoAlt,
+  FaTruck,
+  FaUsers,
+  FaClipboard,
+  FaChartBar,
+} from "react-icons/fa";
 import { Card } from "../../components/ui/Card.jsx";
 import { Button } from "../../components/ui/Button.jsx";
 import { Badge } from "../../components/ui/Badge.jsx";
@@ -116,7 +126,7 @@ export const ShopDashboard = () => {
                   <p className="text-3xl font-bold text-green-600">{stats.totalInventory}</p>
                   <p className="text-xs text-gray-500 mt-1">Units in stock</p>
                 </div>
-                <span className="text-3xl">▢</span>
+                <FaBox className="text-4xl text-green-400 opacity-30" />
               </div>
             </Card>
 
@@ -127,7 +137,7 @@ export const ShopDashboard = () => {
                   <p className="text-3xl font-bold text-blue-600">{stats.totalSales}</p>
                   <p className="text-xs text-gray-500 mt-1">Transactions today</p>
                 </div>
-                <span className="text-3xl">◆</span>
+                <FaShoppingCart className="text-4xl text-blue-400 opacity-30" />
               </div>
             </Card>
 
@@ -138,7 +148,7 @@ export const ShopDashboard = () => {
                   <p className="text-3xl font-bold text-purple-600">₹{stats.totalRevenue}</p>
                   <p className="text-xs text-gray-500 mt-1">Today's earnings</p>
                 </div>
-                <span className="text-3xl">○</span>
+                <FaRupeeSign className="text-4xl text-purple-400 opacity-30" />
               </div>
             </Card>
 
@@ -149,7 +159,7 @@ export const ShopDashboard = () => {
                   <p className="text-3xl font-bold text-red-600">{stats.totalReturns}</p>
                   <p className="text-xs text-gray-500 mt-1">Return requests</p>
                 </div>
-                <span className="text-3xl">⟲</span>
+                <FaUndoAlt className="text-4xl text-red-400 opacity-30" />
               </div>
             </Card>
           </div>
@@ -164,7 +174,7 @@ export const ShopDashboard = () => {
                   <p className="text-3xl font-bold text-indigo-600">{stats.activeStaff}/{stats.totalStaff}</p>
                   <p className="text-xs text-gray-500 mt-1">Active / Total staff</p>
                 </div>
-                <span className="text-3xl">◐</span>
+                <FaUsers className="text-4xl text-indigo-400 opacity-30" />
               </div>
               <Button
                 onClick={() => navigate('/shop/staff')}
@@ -182,7 +192,7 @@ export const ShopDashboard = () => {
                   <p className="text-3xl font-bold text-orange-600">₹{stats.pendingPayments}</p>
                   <p className="text-xs text-gray-500 mt-1">Awaiting payment</p>
                 </div>
-                <span className="text-3xl">▭</span>
+                <FaClipboard className="text-4xl text-orange-400 opacity-30" />
               </div>
               <Button
                 onClick={() => navigate('/shop/payment')}

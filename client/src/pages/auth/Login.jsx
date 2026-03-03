@@ -29,8 +29,8 @@ export const Login = () => {
         setEmail("admin@kiran-dairy.com");
         setPassword("admin123");
       } else {
-        setPhone("9876543210");
-        setPassword("9876543210");
+        setPhone("Kiran-Dairy-Mumbai"); // Shop name as username
+        setPassword("demo123");
       }
     }
 
@@ -70,6 +70,9 @@ export const Login = () => {
         setLoading(false);
         return;
       }
+
+      // Log the user data before storing (for debugging)
+      console.log('Login successful. User data:', user);
 
       login(user, token);
 
@@ -152,17 +155,11 @@ export const Login = () => {
             />
           ) : (
             <Input
-              label="Phone Number"
-              type="tel"
-              placeholder="10-digit phone number"
+              label="Shop Name (Username)"
+              type="text"
+              placeholder="Enter shop name"
               value={phone}
-              onChange={(e) => {
-                const v = e.target.value;
-                setPhone(v);
-
-                // optional: keep password same as phone unless user changed it
-                setPassword((prev) => (prev === "" || prev === phone ? v : prev));
-              }}
+              onChange={(e) => setPhone(e.target.value)}
               required
               disabled={loading}
             />

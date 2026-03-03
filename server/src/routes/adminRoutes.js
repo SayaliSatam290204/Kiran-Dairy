@@ -12,6 +12,18 @@ router.get('/all-shops', authMiddleware, roleMiddleware('admin'), adminControlle
 router.post('/shops', authMiddleware, roleMiddleware('admin'), adminController.createShop);
 router.put('/shops/:id', authMiddleware, roleMiddleware('admin'), adminController.updateShop);
 router.delete('/shops/:id', authMiddleware, roleMiddleware('admin'), adminController.deleteShop);
+
+// ✅ NEW: Shop Ledger & Inventory Routes
+router.get('/shop-ledger', authMiddleware, roleMiddleware('admin'), adminController.getShopsWithInventory);
+router.get('/shop-inventory/:shopId', authMiddleware, roleMiddleware('admin'), adminController.getShopInventory);
+router.post('/shop-inventory/:shopId', authMiddleware, roleMiddleware('admin'), adminController.addProductToShop);
+
+// ✅ NEW: Product Management Routes
+router.get('/all-products', authMiddleware, roleMiddleware('admin'), adminController.getAllProducts);
+router.post('/products', authMiddleware, roleMiddleware('admin'), adminController.createProduct);
+router.put('/products/:productId', authMiddleware, roleMiddleware('admin'), adminController.updateProduct);
+
+// Existing routes
 router.get('/products', authMiddleware, roleMiddleware('admin'), adminController.getProducts);
 router.get('/staff-performance', authMiddleware, roleMiddleware('admin'), adminController.getStaffPerformance);
 router.get('/staff-performance/:staffId', authMiddleware, roleMiddleware('admin'), adminController.getStaffDetailedPerformance);

@@ -10,6 +10,16 @@ export const adminApi = {
   getProducts: () => axiosInstance.get('/admin/products'),
   getStaffPerformance: () => axiosInstance.get('/admin/staff-performance'),
   
+  // ✅ NEW: Shop Ledger & Inventory Management
+  getShopsWithInventory: () => axiosInstance.get('/admin/shop-ledger'),
+  getShopInventory: (shopId) => axiosInstance.get(`/admin/shop-inventory/${shopId}`),
+  addProductToShop: (shopId, data) => axiosInstance.post(`/admin/shop-inventory/${shopId}`, data),
+  
+  // ✅ NEW: Product Management
+  getAllProducts: () => axiosInstance.get('/admin/all-products'),
+  createProduct: (data) => axiosInstance.post('/admin/products', data),
+  updateProduct: (productId, data) => axiosInstance.put(`/admin/products/${productId}`, data),
+  
   // Dispatch operations
   createDispatch: (data) => axiosInstance.post('/dispatch', data),
   createBatchDispatch: (data) => axiosInstance.post('/dispatch', { ...data, isBatchDispatch: true }),
@@ -23,6 +33,13 @@ export const adminApi = {
   getStockLedger: () => axiosInstance.get('/ledger'),
   getLedgerByShop: (shopId) => axiosInstance.get(`/ledger/shop/${shopId}`),
   getLedgerByProduct: (productId) => axiosInstance.get(`/ledger/product/${productId}`),
+  
+  // ✅ Stock Alerts (NEW)
+  getStockAlerts: (shopId = null) => 
+    axiosInstance.get('/ledger/alerts/all', { params: shopId ? { shopId } : {} }),
+  getAlertCount: (shopId = null) => 
+    axiosInstance.get('/ledger/alerts/count', { params: shopId ? { shopId } : {} }),
+  getStockReport: () => axiosInstance.get('/ledger/report/stock'),
   
   // Reports
   generateReport: (filters) => axiosInstance.get('/admin/reports', { params: filters }),

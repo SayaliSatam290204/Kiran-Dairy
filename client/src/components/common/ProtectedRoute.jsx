@@ -6,6 +6,9 @@ import { Skeleton } from "../ui/Skeleton.jsx";
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
 
+  // Double-check token exists in localStorage (catches interceptor edge cases)
+  const token = localStorage.getItem('token');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -22,9 +25,27 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  // If no token, always redirect to login
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
+  // If no user data, redirect to login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Validate user has required fields
+  if (!user.role) {
+    console.error('User object missing role field:', user);
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check role authorization
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    console.warn(
+      `User role '${user.role}' not in allowed roles ${JSON.stringify(allowedRoles)}`
+    );
     return <Navigate to="/unauthorized" replace />;
   }
 

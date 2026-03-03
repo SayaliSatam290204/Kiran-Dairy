@@ -1,6 +1,13 @@
 // src/components/ui/Modal.jsx
-export const Modal = ({ isOpen, title, onClose, children }) => {
+export const Modal = ({ isOpen, title, onClose, children, size = "md" }) => {
   if (!isOpen) return null;
+
+  const sizeClasses = {
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+  };
 
   return (
     <div
@@ -8,7 +15,7 @@ export const Modal = ({ isOpen, title, onClose, children }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-md w-full shadow-lg border flex flex-col max-h-[calc(100vh-100px)]"
+        className={`bg-white rounded-xl ${sizeClasses[size]} w-full shadow-lg border flex flex-col max-h-[calc(100vh-100px)]`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4 p-6 border-b">

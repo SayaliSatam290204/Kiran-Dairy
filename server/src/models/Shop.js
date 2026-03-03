@@ -4,7 +4,9 @@ const shopSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true
+      required: true,
+      unique: true,
+      trim: true
     },
     location: {
       type: String,

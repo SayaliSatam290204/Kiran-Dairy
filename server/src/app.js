@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import 'express-async-errors';
 import authRoutes from './routes/authRoutes.js';
@@ -10,14 +12,22 @@ import returnRoutes from './routes/returnRoutes.js';
 import ledgerRoutes from './routes/ledgerRoutes.js';
 import staffRoutes from './routes/staffRoutes.js';
 import staffPaymentRoutes from './routes/staffPaymentRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 const app = express();
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, "..", "uploads")));
+
+// ✅ Serve products folder (if it exists)
+app.use('/uploads', express.static(path.join(__dirname,"..", "public")));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -29,6 +39,7 @@ app.use('/api/return', returnRoutes);
 app.use('/api/ledger', ledgerRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/staff-payment', staffPaymentRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

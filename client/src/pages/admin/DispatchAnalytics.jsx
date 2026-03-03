@@ -106,6 +106,24 @@ export const DispatchAnalytics = () => {
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
         </div>
+      ) : !analytics || (analytics.frequencyByShop && analytics.frequencyByShop.length === 0) ? (
+        <Card className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+            <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+            </svg>
+          </div>
+          <p className="text-lg font-semibold text-gray-900 mb-2">No Dispatch Data Yet</p>
+          <p className="text-gray-600 mb-4">
+            Create a dispatch from the Dispatch page to see analytics here.
+          </p>
+          <a
+            href="/admin/dispatch"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition"
+          >
+            Go to Dispatch
+          </a>
+        </Card>
       ) : analytics ? (
         <>
           {/* Summary Stats */}

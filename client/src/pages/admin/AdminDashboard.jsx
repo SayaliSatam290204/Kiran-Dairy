@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import {
+  FaStore,
+  FaBoxes,
+  FaTruck,
+  FaRupeeSign,
+  FaUsers,
+  FaUndoAlt,
+  FaChartBar,
+} from "react-icons/fa";
 import { Card } from "../../components/ui/Card.jsx";
 import { Button } from "../../components/ui/Button.jsx";
 import { Badge } from "../../components/ui/Badge.jsx";
@@ -90,7 +99,7 @@ export const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-blue-600">{stats.totalShops}</p>
                   <p className="text-xs text-gray-500 mt-1">Active branches</p>
                 </div>
-                <span className="text-3xl">□</span>
+                <FaStore className="text-4xl text-blue-400 opacity-30" />
               </div>
             </Card>
 
@@ -101,7 +110,7 @@ export const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-green-600">{stats.totalStock}</p>
                   <p className="text-xs text-gray-500 mt-1">Units in inventory</p>
                 </div>
-                <span className="text-3xl">▢</span>
+                <FaBoxes className="text-3xl text-green-400" />
               </div>
             </Card>
 
@@ -121,7 +130,7 @@ export const AdminDashboard = () => {
                     </div>
                   )}
                 </div>
-                <span className="text-3xl">⟲</span>
+                <FaTruck className="text-4xl text-purple-400 opacity-30" />
               </div>
             </Card>
 
@@ -132,7 +141,7 @@ export const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-orange-600">₹{stats.totalRevenue}</p>
                   <p className="text-xs text-gray-500 mt-1">Overall earnings</p>
                 </div>
-                <span className="text-3xl">○</span>
+                <FaRupeeSign className="text-4xl text-orange-400 opacity-30" />
               </div>
             </Card>
           </div>
@@ -147,7 +156,7 @@ export const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-cyan-600">{stats.totalShops}</p>
                   <p className="text-xs text-gray-500 mt-1">Active branches</p>
                 </div>
-                <span className="text-3xl">□</span>
+                <FaStore className="text-4xl text-cyan-400 opacity-30" />
               </div>
               <Button
                 onClick={() => navigate('/admin/shops')}
@@ -165,7 +174,7 @@ export const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-indigo-600">{stats.activeStaff}/{stats.totalStaff}</p>
                   <p className="text-xs text-gray-500 mt-1">Active / Total staff</p>
                 </div>
-                <span className="text-3xl">◐</span>
+                <FaUsers className="text-4xl text-indigo-400 opacity-30" />
               </div>
               <Button
                 onClick={() => navigate('/admin/staff')}
@@ -183,7 +192,7 @@ export const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-red-600">{stats.pendingReturns}</p>
                   <p className="text-xs text-gray-500 mt-1">Return requests</p>
                 </div>
-                <span className="text-3xl">⟲</span>
+                <FaUndoAlt className="text-4xl text-red-400 opacity-30" />
               </div>
               <Button
                 onClick={() => navigate('/admin/returns')}

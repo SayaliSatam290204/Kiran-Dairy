@@ -9,7 +9,7 @@ export const salesController = {
   // Create a new sale and update inventory
   create: async (req, res) => {
     try {
-      const { items, totalAmount, paymentMethod } = req.body;
+      const { items, totalAmount, paymentMethod, paymentDetails } = req.body;
       const shopId = req.user?.shopId;
 
       // Validate input
@@ -19,6 +19,20 @@ export const salesController = {
 
       if (!shopId) {
         return responseHelper.error(res, 'Shop ID not found in user session', 400);
+      }
+
+      // Validate split payment amounts if applicable
+      if (paymentMethod === 'split' && paymentDetails) {
+        let totalPaid = 0;
+        Object.keys(paymentDetails).forEach(method => {
+          if (paymentDetails[method] && paymentDetails[method].amount) {
+            totalPaid += paymentDetails[method].amount;
+          }
+        });
+        
+        if (Math.abs(totalPaid - totalAmount) > 0.01) { // Allow small floating point difference
+          return responseHelper.error(res, 'Payment amounts do not equal total amount', 400);
+        }
       }
 
       // Generate unique bill number
@@ -56,6 +70,7 @@ export const salesController = {
         items: processedItems,
         totalAmount,
         paymentMethod,
+        paymentDetails: paymentDetails || null,
         paymentStatus: 'completed',
         saleDate: new Date()
       });

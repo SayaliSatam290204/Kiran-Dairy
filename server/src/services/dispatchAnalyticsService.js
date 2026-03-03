@@ -273,19 +273,33 @@ export const dispatchAnalyticsService = {
       ]);
 
       return {
-        frequencyByShop,
-        statusSummary,
-        batchStats,
-        deliveryTimeStats,
-        topShops,
+        frequencyByShop: frequencyByShop || [],
+        statusSummary: statusSummary || [],
+        batchStats: batchStats || [],
+        deliveryTimeStats: deliveryTimeStats || { avgDeliveryTime: 0, minDeliveryTime: 0, maxDeliveryTime: 0 },
+        topShops: topShops || [],
         dateRange: {
           startDate,
           endDate
-        }
+        },
+        message: frequencyByShop.length === 0 ? "No dispatch data available yet" : undefined
       };
     } catch (error) {
       console.error('Error fetching comprehensive analytics:', error);
-      throw error;
+      // Return empty analytics instead of throwing
+      return {
+        frequencyByShop: [],
+        statusSummary: [],
+        batchStats: [],
+        deliveryTimeStats: { avgDeliveryTime: 0, minDeliveryTime: 0, maxDeliveryTime: 0 },
+        topShops: [],
+        dateRange: {
+          startDate,
+          endDate
+        },
+        message: "Failed to fetch analytics, but continuing with empty data",
+        error: error.message
+      };
     }
   }
 };

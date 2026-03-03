@@ -3,7 +3,24 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import {
+  FaHome,
+  FaFileAlt,
+  FaUndoAlt,
+  FaStore,
+  FaUsers,
+  FaMoneyBillWave,
+  FaBox,
+  FaExclamationTriangle,
+  FaTruck,
+  FaHistory,
+  FaChartLine,
+  FaShoppingCart,
+  FaReceipt,
+  FaHistory as FaReturnHistory,
+} from "react-icons/fa";
 import { returnApi } from "../../api/returnApi.js";
+import { adminApi } from "../../api/adminApi.js";
 
 const linkBase = "block px-3 py-2 rounded-md font-medium transition";
 
@@ -18,6 +35,9 @@ export const Sidebar = () => {
   // Pending returns count (admin only)
   const [pendingCount, setPendingCount] = useState(0);
   const [lastNotifiedCount, setLastNotifiedCount] = useState(0);
+
+  // Stock alert count (admin only)
+  const [alertCount, setAlertCount] = useState(0);
 
   const isAdmin = user?.role === "admin";
   const isShop = user?.role === "shop";
@@ -60,6 +80,28 @@ export const Sidebar = () => {
     return () => clearInterval(timer);
   }, [isAdmin, lastNotifiedCount]);
 
+  // Fetch stock alert count
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    let timer;
+
+    const fetchStockAlerts = async () => {
+      try {
+        const res = await adminApi.getAlertCount();
+        const count = res.data?.data?.criticalCount ?? 0;
+        setAlertCount(count);
+      } catch (e) {
+        // silent fail
+      }
+    };
+
+    fetchStockAlerts();
+    timer = setInterval(fetchStockAlerts, 30000); // every 30 sec
+
+    return () => clearInterval(timer);
+  }, [isAdmin]);
+
   return (
     <aside className="bg-white w-64 border-r min-h-screen p-4">
       <h2 className="text-lg font-bold mb-4 text-gray-900">Menu</h2>
@@ -67,33 +109,26 @@ export const Sidebar = () => {
       {isAdmin && (
         <div className="space-y-2">
           <NavLink to="/admin/dashboard" className={linkClass}>
-            Dashboard
-          </NavLink>
-
-          <NavLink to="/admin/dispatch" className={linkClass}>
-            Dispatch
-          </NavLink>
-
-          <NavLink to="/admin/dispatch-history" className={linkClass}>
-            Dispatch History
-          </NavLink>
-
-          <NavLink to="/admin/dispatch-analytics" className={linkClass}>
-            Dispatch Analytics
-          </NavLink>
-
-          <NavLink to="/admin/logs" className={linkClass}>
-            Stock Ledger
+            <div className="flex items-center gap-3">
+              <FaHome className="w-4 h-4" />
+              <span>Dashboard</span>
+            </div>
           </NavLink>
 
           <NavLink to="/admin/reports" className={linkClass}>
-            Reports
+            <div className="flex items-center gap-3">
+              <FaFileAlt className="w-4 h-4" />
+              <span>Reports</span>
+            </div>
           </NavLink>
 
           {/* Returns with badge */}
           <NavLink to="/admin/returns" className={linkClass}>
             <div className="flex items-center justify-between">
-              <span>Returns</span>
+              <div className="flex items-center gap-3">
+                <FaUndoAlt className="w-4 h-4" />
+                <span>Returns</span>
+              </div>
 
               {pendingCount > 0 && (
                 <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-red-600 text-white">
@@ -104,17 +139,76 @@ export const Sidebar = () => {
           </NavLink>
 
           <NavLink to="/admin/shops" className={linkClass}>
-            Shop Management
+            <div className="flex items-center gap-3">
+              <FaStore className="w-4 h-4" />
+              <span>Shop Management</span>
+            </div>
+          </NavLink>
+
+          <NavLink to="/admin/products" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaBox className="w-4 h-4" />
+              <span>Products</span>
+            </div>
+          </NavLink>
+
+          <NavLink to="/admin/staff" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaUsers className="w-4 h-4" />
+              <span>Staff Management</span>
+            </div>
+          </NavLink>
+
+          <NavLink to="/admin/staff-payment" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaMoneyBillWave className="w-4 h-4" />
+              <span>Staff Payments</span>
+            </div>
           </NavLink>
 
           <hr className="my-3" />
 
-          <NavLink to="/admin/staff" className={linkClass}>
-            Staff Management
+          <NavLink to="/admin/shop-ledger" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaReceipt className="w-4 h-4" />
+              <span>Shop Ledger & Inventory</span>
+            </div>
           </NavLink>
 
-          <NavLink to="/admin/staff-payment" className={linkClass}>
-            Staff Payments
+          <NavLink to="/admin/stock-alerts" className={linkClass}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FaExclamationTriangle className="w-4 h-4" />
+                <span>Stock Alerts</span>
+              </div>
+
+              {alertCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-red-600 text-white">
+                  {alertCount}
+                </span>
+              )}
+            </div>
+          </NavLink>
+
+          <NavLink to="/admin/dispatch" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaTruck className="w-4 h-4" />
+              <span>Dispatch</span>
+            </div>
+          </NavLink>
+
+          <NavLink to="/admin/dispatch-history" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaHistory className="w-4 h-4" />
+              <span>Dispatch History</span>
+            </div>
+          </NavLink>
+
+          <NavLink to="/admin/dispatch-analytics" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaChartLine className="w-4 h-4" />
+              <span>Dispatch Analytics</span>
+            </div>
           </NavLink>
         </div>
       )}
@@ -122,37 +216,61 @@ export const Sidebar = () => {
       {isShop && (
         <div className="space-y-2">
           <NavLink to="/shop/dashboard" className={linkClass}>
-            Dashboard
+            <div className="flex items-center gap-3">
+              <FaHome className="w-4 h-4" />
+              <span>Dashboard</span>
+            </div>
           </NavLink>
 
           <NavLink to="/shop/inventory" className={linkClass}>
-            Inventory
+            <div className="flex items-center gap-3">
+              <FaBox className="w-4 h-4" />
+              <span>Inventory</span>
+            </div>
           </NavLink>
 
           <NavLink to="/shop/pos" className={linkClass}>
-            POS Billing
+            <div className="flex items-center gap-3">
+              <FaShoppingCart className="w-4 h-4" />
+              <span>POS Billing</span>
+            </div>
           </NavLink>
 
           <NavLink to="/shop/sales" className={linkClass}>
-            Sales History
+            <div className="flex items-center gap-3">
+              <FaReceipt className="w-4 h-4" />
+              <span>Sales History</span>
+            </div>
           </NavLink>
 
           <NavLink to="/shop/dispatch" className={linkClass}>
-            Dispatch Confirmation
+            <div className="flex items-center gap-3">
+              <FaTruck className="w-4 h-4" />
+              <span>Dispatch Confirmation</span>
+            </div>
           </NavLink>
 
           <NavLink to="/shop/returns" className={linkClass}>
-            Returns
+            <div className="flex items-center gap-3">
+              <FaUndoAlt className="w-4 h-4" />
+              <span>Returns</span>
+            </div>
           </NavLink>
 
           <hr className="my-3" />
 
           <NavLink to="/shop/staff" className={linkClass}>
-            Our Staff
+            <div className="flex items-center gap-3">
+              <FaUsers className="w-4 h-4" />
+              <span>Our Staff</span>
+            </div>
           </NavLink>
 
           <NavLink to="/shop/payment" className={linkClass}>
-            Staff Payments
+            <div className="flex items-center gap-3">
+              <FaMoneyBillWave className="w-4 h-4" />
+              <span>Staff Payments</span>
+            </div>
           </NavLink>
         </div>
       )}

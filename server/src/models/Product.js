@@ -1,39 +1,93 @@
-import mongoose from 'mongoose';
+
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
     },
+
     sku: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      trim: true,
+      uppercase: true,
     },
+
     description: {
       type: String,
-      default: ''
+      default: "",
+      trim: true,
     },
+
     price: {
       type: Number,
-      required: true
+      required: true,
+      min: 0,
     },
+
     unit: {
       type: String,
-      enum: ['liter', 'kg', 'piece', 'dozen'],
-      required: true
+      enum: ["liter", "kg", "piece", "dozen"],
+      required: true,
     },
+
     category: {
       type: String,
-      default: 'General'
+      enum: [
+        "Liquid Milk",
+        "Fermented Products",
+        "Fat-rich Products",
+        "Cheese & Paneer",
+        "Sweet Products",
+        "Frozen Dairy",
+        "Powdered Dairy",
+        "Value-added / Flavored"
+      ],
+      required: true,
     },
+
+    subcategory: {
+      type: String,
+      default: "",
+      trim: true,
+      // Examples: "Toned Milk", "Full Cream Milk", "Curd", "Yogurt", "Butter", "Ghee", etc.
+    },
+
+    // ✅ Product image (uploaded via Multer or external URL)
+    image: {
+      type: String,
+      default: "",
+      trim: true,
+      // Stores: "/uploads/products/filename.jpg" or image URL
+    },
+
+    // Keeping imageUrl for backward compatibility
+    imageUrl: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // ✅ OPTIONAL: Multiple images (future use)
+    images: {
+      type: [String],
+      default: [],
+    },
+
     isActive: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('Product', productSchema);
+// Helpful index (optional) for faster search by name/category
+productSchema.index({ name: 1, category: 1 });
+
+export default mongoose.model("Product", productSchema);
+

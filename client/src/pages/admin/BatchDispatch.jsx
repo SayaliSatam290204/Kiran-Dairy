@@ -33,8 +33,21 @@ export const BatchDispatch = () => {
         adminApi.getProducts()
       ]);
 
-      setShops(shopsRes.data.data || []);
-      setProducts(productsRes.data.data || []);
+      console.log("Shops Response:", shopsRes);
+      console.log("Products Response:", productsRes);
+
+      const shopsData = Array.isArray(shopsRes.data.data) ? shopsRes.data.data : (Array.isArray(shopsRes.data) ? shopsRes.data : []);
+      const productsData = Array.isArray(productsRes.data.data) ? productsRes.data.data : (Array.isArray(productsRes.data) ? productsRes.data : []);
+
+      console.log("Shops Data:", shopsData);
+      console.log("Products Data:", productsData);
+
+      setShops(shopsData);
+      setProducts(productsData);
+
+      if (shopsData.length === 0) {
+        toast.error("No shops available. Please create shops first.");
+      }
     } catch (error) {
       console.error("Failed to load data:", error);
       toast.error(

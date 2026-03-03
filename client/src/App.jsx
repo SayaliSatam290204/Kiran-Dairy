@@ -16,6 +16,11 @@ import { Staff } from "./pages/admin/Staff.jsx";
 import { StaffPayment } from "./pages/admin/StaffPayment.jsx";
 import { Returns as AdminReturns } from "./pages/admin/Returns.jsx";
 import { Shops } from "./pages/admin/Shops.jsx";
+import { ShopLedger } from "./pages/admin/ShopLedger.jsx";
+import { StockAlerts } from "./pages/admin/StockAlerts.jsx";
+import { Products } from "./pages/admin/Products.jsx";
+import { CreateProduct } from "./pages/admin/CreateProduct.jsx";
+import { ProductDetail } from "./pages/admin/ProductDetail.jsx";
 
 // Shop Pages
 import { ShopDashboard } from "./pages/shop/ShopDashboard.jsx";
@@ -153,6 +158,56 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <Shops />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/shop-ledger"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <ShopLedger />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/stock-alerts"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <StockAlerts />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/products"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <Products />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/products/create"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <CreateProduct />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/products/:productId"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <ProductDetail />
                 </AdminLayout>
               </ProtectedRoute>
             }

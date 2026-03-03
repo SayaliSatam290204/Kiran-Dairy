@@ -49,8 +49,15 @@ const saleSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['cash', 'card', 'online', 'cheque'],
+      enum: ['cash', 'card', 'online', 'cheque', 'upi', 'split'],
       default: 'cash'
+    },
+    paymentDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+      // Structure:
+      // For single payment: { cash: {amount}, card: {amount}, upi: {amount, provider} }
+      // For split: { upi: {amount, provider}, cash: {amount}, card: {amount} }
     },
     paymentStatus: {
       type: String,

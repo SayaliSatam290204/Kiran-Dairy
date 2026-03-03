@@ -87,17 +87,10 @@ export const Shops = () => {
     const { name, value, type, checked } = e.target;
 
     setFormData((prev) => {
-      const updated = {
+      return {
         ...prev,
         [name]: type === "checkbox" ? checked : value
       };
-
-      // when creating: auto-fill password = contactNo
-      if (name === "contactNo" && !editingId) {
-        updated.password = value; // phone = password
-      }
-
-      return updated;
     });
   };
 
@@ -122,14 +115,18 @@ export const Shops = () => {
       return toast.error("Contact number must be 10 digits");
     }
 
+    // password required when creating
+    if (!editingId && !formData.password) {
+      return toast.error("Please set a password for the shop");
+    }
+
     try {
       if (editingId) {
         await adminApi.updateShop(editingId, formData);
         toast.success("Shop updated successfully");
       } else {
-        // password already auto-filled with contactNo
         await adminApi.createShop(formData);
-        toast.success("Shop created successfully (Login: phone = password)");
+        toast.success("Shop created successfully (Username = Shop Name, Password = Set by admin)");
       }
 
       handleCloseModal();
@@ -229,7 +226,7 @@ export const Shops = () => {
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Shop Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Shop Name *" name="name" value={formData.name} onChange={handleChangeForm} required className="mb-0" />
+                <Input label="Shop Name (Username) *" name="name" value={formData.name} onChange={handleChangeForm} required className="mb-0" />
                 <Input label="Location *" name="location" value={formData.location} onChange={handleChangeForm} required className="mb-0" />
               </div>
             </div>
@@ -242,26 +239,21 @@ export const Shops = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <Input label="Phone Number (Username) *" name="contactNo" value={formData.contactNo} onChange={handleChangeForm} required className="mb-0" />
-                {!editingId && (
-                  <Input
-                    label="Password (Auto = Phone) *"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChangeForm}
-                    disabled
-                    placeholder="Auto-filled with phone number"
-                    className="mb-0"
-                  />
-                )}
+                <Input label="Phone Number *" name="contactNo" value={formData.contactNo} onChange={handleChangeForm} required className="mb-0" />
+                <Input
+                  label="Password *"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChangeForm}
+                  placeholder={editingId ? "Leave empty to keep current password" : "Set shop password"}
+                  className="mb-0"
+                />
               </div>
 
-              {!editingId && (
-                <p className="text-xs text-gray-500 mt-2">
-                  Shop Login will be: <b>Username = Phone</b> and <b>Password = Phone</b>
-                </p>
-              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Shop Login Credentials: <b>Username = Shop Name</b> | <b>Password = Set {editingId ? "or update" : "below"}</b>
+              </p>
             </div>
 
             <div className="mb-6">

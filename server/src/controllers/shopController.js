@@ -10,6 +10,7 @@ import { responseHelper } from "../utils/responseHelper.js";
 export const shopController = {
   getDashboard: async (req, res) => {
     try {
+
       const shopId = req.user.shopId;
       if (!shopId) return responseHelper.error(res, "ShopId missing in token", 400);
 
@@ -82,7 +83,7 @@ export const shopController = {
       if (!shopId) return responseHelper.error(res, "ShopId missing in token", 400);
 
       const inventory = await Inventory.find({ shopId })
-        .populate("productId", "name sku price category")
+        .populate("productId", "name sku price category unit imageUrl")
         .sort({ createdAt: -1 });
 
       responseHelper.success(res, inventory, "Inventory fetched successfully");

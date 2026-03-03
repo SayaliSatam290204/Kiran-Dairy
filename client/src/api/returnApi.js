@@ -12,7 +12,7 @@ export const returnApi = {
 
   create: (data) => axiosInstance.post("/return", data),
 
-  updateStatus: (id, status) => axiosInstance.put(`/return/${id}/status`, { status }),
+  updateStatus: (id, payload) => axiosInstance.put(`/return/${id}/status`, payload),
 
   deleteReturn: (id) => axiosInstance.delete(`/return/${id}`),
 

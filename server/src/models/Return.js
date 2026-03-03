@@ -10,7 +10,7 @@ const returnSchema = new mongoose.Schema(
     saleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Sale',
-      required: true
+      default: null // Optional - for inventory returns without sales
     },
     shopId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -30,6 +30,7 @@ const returnSchema = new mongoose.Schema(
         },
         reason: {
           type: String,
+          enum: ['damaged', 'expired', 'excess'], // Specific reasons for inventory returns
           required: true
         }
       }
@@ -43,9 +44,22 @@ const returnSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending'
     },
+    rejectionReason: {
+      type: String,
+      default: null // Store reason if admin rejects
+    },
     returnDate: {
       type: Date,
       default: Date.now
+    },
+    approvedDate: {
+      type: Date,
+      default: null
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
     }
   },
   { timestamps: true }
