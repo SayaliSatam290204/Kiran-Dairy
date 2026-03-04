@@ -1,11 +1,15 @@
-import express from 'express';
-import {authController} from '../controllers/authController.js';
+import express from "express";
+import { authController } from "../controllers/authController.js";
+
 const router = express.Router();
 
-// POST /api/auth/login
-router.post("/login", authController.login);
+// ✅ NEW: Admin Registration
+router.post("/admin/register", authController.registerAdmin);
 
-// POST /api/auth/register
-router.post("/register", authController.register);
+// ✅ Check if admin exists (for registration flow)
+router.get("/admin/exists", authController.adminExists);
+
+// ✅ Login (Admin/Shop)
+router.post("/login", authController.login);
 
 export default router;

@@ -1,9 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
 // Auth Pages
 import { Login } from "./pages/auth/Login.jsx";
+import { AdminRegister } from "./pages/auth/AdminRegister.jsx";
+import { SetupRedirect } from "./pages/auth/SetupRedirect.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
@@ -38,28 +40,27 @@ import { AdminLayout } from "./layouts/AdminLayout.jsx";
 import { ShopLayout } from "./layouts/ShopLayout.jsx";
 
 import "./index.css";
+import "./App.css";
 
 function App() {
   return (
     <AuthProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        {/* Global Toast Notifications */}
         <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
-            style: {
-              fontSize: "14px",
-            },
+            style: { fontSize: "14px" },
           }}
         />
 
         <Routes>
-          {/* Root -> Login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* ✅ Root -> checks admin exists -> redirects to /admin/register or /login */}
+          <Route path="/" element={<SetupRedirect />} />
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
 
           {/* Admin */}
           <Route
@@ -295,28 +296,39 @@ function App() {
             }
           />
 
+          {/* Unauthorized */}
           <Route
-          path="/unauthorized"
-          element={
-          <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-            <div className="bg-white border rounded-xl p-8 text-center max-w-md w-full">
-              <h2 className="text-xl font-bold mb-2">Unauthorized</h2>
-              <p className="text-gray-600 mb-4">You don’t have access to this page.</p>
-              <button
-              onClick={() => window.history.back()}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Go Back
-                </button>
+            path="/unauthorized"
+            element={
+              <div className="app-page">
+                <div className="app-card">
+                  <h2 className="app-title">Unauthorized</h2>
+                  <p className="app-subtitle">You don’t have access to this page.</p>
+                  <button className="app-btn" onClick={() => window.history.back()}>
+                    Go Back
+                  </button>
                 </div>
-                </div>
-              }
-              />
-          
+              </div>
+            }
+          />
+
           {/* 404 */}
           <Route
             path="*"
-            element={<div className="p-6 text-center">404 - Page Not Found</div>}
+            element={
+              <div className="app-page">
+                <div className="app-card">
+                  <h2 className="app-title">404 - Page Not Found</h2>
+                  <p className="app-subtitle">The page you are looking for does not exist.</p>
+                  <button
+                    className="app-btn"
+                    onClick={() => (window.location.href = "/login")}
+                  >
+                    Go to Login
+                  </button>
+                </div>
+              </div>
+            }
           />
         </Routes>
       </Router>

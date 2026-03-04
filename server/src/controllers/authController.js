@@ -2,6 +2,14 @@ import User from "../models/User.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+const signToken = (user) => {
+  return jwt.sign(
+    { id: user._id, role: user.role, shopId: user.shopId },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+};
+
 export const authController = {
   // ✅ LOGIN (Admin: email + password) | (Shop: phone + password)
   login: async (req, res) => {
@@ -14,29 +22,25 @@ export const authController = {
           .json({ message: "Email/Phone and password are required" });
       }
 
-      // ✅ Find user by email or phone
       const query = email ? { email } : { phone };
 
       const user = await User.findOne(query).select("+password");
+
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // ✅ Check active
       if (user.isActive === false) {
         return res.status(403).json({ message: "Account is inactive" });
       }
 
       const isPasswordValid = await bcryptjs.compare(password, user.password);
+
       if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = jwt.sign(
-        { id: user._id, role: user.role, shopId: user.shopId },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+      const token = signToken(user);
 
       res.json({
         message: "Login successful",
@@ -48,80 +52,94 @@ export const authController = {
             phone: user.phone || null,
             role: user.role,
             shopId: user.shopId,
-            isActive: user.isActive
+            isActive: user.isActive,
           },
-          token
-        }
+          token,
+        },
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
   },
 
-  // ✅ REGISTER (keep for admin use / optional)
-  register: async (req, res) => {
+  // ✅ CHECK IF ADMIN EXISTS
+  adminExists: async (req, res) => {
     try {
-      const { name, email, phone, password, role } = req.body;
+      const count = await User.countDocuments({ role: "admin" });
 
-      // ✅ allow (email OR phone) for register, but password + role + name required
-      if (!name || !password || !role || (!email && !phone)) {
+      return res.json({
+        exists: count > 0,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  /**
+   * ✅ ADMIN REGISTER ONLY
+   */
+  registerAdmin: async (req, res) => {
+    try {
+      const { name, email, password, adminKey } = req.body;
+
+      if (!name || !email || !password) {
         return res
           .status(400)
-          .json({ message: "Name, role, password and Email/Phone are required" });
+          .json({ message: "Name, email and password are required" });
       }
 
-      // ✅ check duplicates
-      if (email) {
-        const existingEmail = await User.findOne({ email });
-        if (existingEmail) {
-          return res.status(409).json({ message: "Email already registered" });
+      const adminCount = await User.countDocuments({ role: "admin" });
+
+      if (adminCount > 0) {
+        const requiredKey = process.env.ADMIN_REGISTER_KEY;
+
+        if (requiredKey && adminKey !== requiredKey) {
+          return res
+            .status(403)
+            .json({ message: "Admin registration is disabled" });
         }
       }
 
-      if (phone) {
-        const existingPhone = await User.findOne({ phone });
-        if (existingPhone) {
-          return res.status(409).json({ message: "Phone already registered" });
-        }
+      const existingEmail = await User.findOne({ email });
+
+      if (existingEmail) {
+        return res.status(409).json({ message: "Email already registered" });
       }
 
       const hashedPassword = await bcryptjs.hash(password, 10);
 
       const user = await User.create({
         name,
-        email: email || null,
-        phone: phone || null,
+        email,
+        phone: null,
         password: hashedPassword,
-        role
+        role: "admin",
+        shopId: null,
+        isActive: true,
       });
 
-      const token = jwt.sign(
-        { id: user._id, role: user.role, shopId: user.shopId },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+      const token = signToken(user);
 
       res.status(201).json({
-        message: "Registration successful",
+        message: "Admin registration successful",
         data: {
           user: {
             id: user._id,
             name: user.name,
-            email: user.email || null,
-            phone: user.phone || null,
+            email: user.email,
+            phone: null,
             role: user.role,
-            shopId: user.shopId,
-            isActive: user.isActive
+            shopId: null,
+            isActive: user.isActive,
           },
-          token
-        }
+          token,
+        },
       });
     } catch (error) {
-      // duplicate key error
       if (error.code === 11000) {
-        return res.status(409).json({ message: "Email/Phone already exists" });
+        return res.status(409).json({ message: "Email already exists" });
       }
       res.status(500).json({ message: error.message });
     }
-  }
+  },
 };
