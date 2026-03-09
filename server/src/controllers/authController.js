@@ -142,4 +142,120 @@ export const authController = {
       res.status(500).json({ message: error.message });
     }
   },
+
+  // ✅ GET USER PROFILE
+  getProfile: async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        message: "Profile retrieved successfully",
+        data: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // ✅ UPDATE USER PROFILE
+  updateProfile: async (req, res) => {
+    try {
+      const { name, email, password, newPassword } = req.body;
+
+      const user = await User.findById(req.user.id).select("+password");
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // If updating password, verify old password
+      if (newPassword) {
+        if (!password) {
+          return res
+            .status(400)
+            .json({ message: "Current password is required" });
+        }
+
+        const isPasswordValid = await bcryptjs.compare(password, user.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({ message: "Incorrect current password" });
+        }
+
+        user.password = await bcryptjs.hash(newPassword, 10);
+      }
+
+      // Update name if provided
+      if (name) user.name = name;
+
+      // Update email if provided and not already in use
+      if (email && email !== user.email) {
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+          return res.status(409).json({ message: "Email already in use" });
+        }
+        user.email = email;
+      }
+
+      await user.save();
+
+      res.json({
+        message: "Profile updated successfully",
+        data: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isActive: user.isActive,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // ✅ CHANGE PASSWORD
+  changePassword: async (req, res) => {
+    try {
+      const { password, newPassword } = req.body;
+
+      if (!password || !newPassword) {
+        return res
+          .status(400)
+          .json({ message: "Current password and new password are required" });
+      }
+
+      const user = await User.findById(req.user.id).select("+password");
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await bcryptjs.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Incorrect current password" });
+      }
+
+      user.password = await bcryptjs.hash(newPassword, 10);
+      await user.save();
+
+      res.json({
+        message: "Password changed successfully",
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 };

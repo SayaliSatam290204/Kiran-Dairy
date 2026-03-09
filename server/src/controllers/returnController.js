@@ -212,12 +212,12 @@ export const returnController = {
         returnRecord.approvedBy = req.user.id;
 
         for (const item of returnRecord.items) {
-          // Increase inventory because return approved
+          // REMOVE inventory because items are being returned (removed from shop)
           await inventoryService.updateInventory(
             returnRecord.shopId,
             item.productId,
-            item.quantity,
-            "return_in",
+            -item.quantity,
+            "return_out",
             returnRecord._id.toString()
           );
         }
@@ -228,13 +228,13 @@ export const returnController = {
         returnRecord.rejectionReason = req.body.rejectionReason;
       }
 
-      // If admin changes approved -> rejected, reverse inventory
+      // If admin changes approved -> rejected, reverse inventory (add items back)
       if (previousStatus === "approved" && status === "rejected") {
         for (const item of returnRecord.items) {
           await inventoryService.updateInventory(
             returnRecord.shopId,
             item.productId,
-            -item.quantity,
+            item.quantity,
             "adjustment",
             returnRecord._id.toString()
           );

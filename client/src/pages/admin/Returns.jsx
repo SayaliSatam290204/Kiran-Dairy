@@ -121,13 +121,13 @@ export const Returns = () => {
     },
 
     {
-      key: "items",
+      key: "itemsCount",
       label: "Items",
       render: (items) => (Array.isArray(items) ? items.length : 0)
     },
 
     {
-      key: "items",
+      key: "itemsProducts",
       label: "Products",
       render: (items) =>
         Array.isArray(items) && items.length
@@ -138,7 +138,7 @@ export const Returns = () => {
     },
 
     {
-      key: "items",
+      key: "itemsReasons",
       label: "Reasons",
       render: (items) =>
         Array.isArray(items) && items.length

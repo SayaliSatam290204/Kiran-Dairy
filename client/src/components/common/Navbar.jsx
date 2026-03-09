@@ -6,6 +6,7 @@ import { useAuth } from "../../hooks/useAuth.js";
 import { Modal } from "../ui/Modal.jsx";
 import { Badge } from "../ui/Badge.jsx";
 import { Button } from "../ui/Button.jsx";
+import { FaUser, FaSignOutAlt } from "react-icons/fa";
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
@@ -68,11 +69,23 @@ export const Navbar = () => {
                 <div className="text-xs text-gray-500">{user?.email || ""}</div>
               </div>
 
+              {user?.role === "admin" && (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/admin/profile");
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 text-blue-600 font-medium flex items-center gap-2"
+                >
+                  <FaUser size={16} /> My Profile
+                </button>
+              )}
+
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 text-red-600 font-medium"
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 text-red-600 font-medium flex items-center gap-2"
               >
-                Logout
+                <FaSignOutAlt size={16} /> Logout
               </button>
             </div>
           )}

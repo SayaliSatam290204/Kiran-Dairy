@@ -23,6 +23,7 @@ import { StockAlerts } from "./pages/admin/StockAlerts.jsx";
 import { Products } from "./pages/admin/Products.jsx";
 import { CreateProduct } from "./pages/admin/CreateProduct.jsx";
 import { ProductDetail } from "./pages/admin/ProductDetail.jsx";
+import { AdminProfile } from "./pages/admin/AdminProfile.jsx";
 
 // Shop Pages
 import { ShopDashboard } from "./pages/shop/ShopDashboard.jsx";
@@ -209,6 +210,16 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <ProductDetail />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <AdminProfile />
                 </AdminLayout>
               </ProtectedRoute>
             }

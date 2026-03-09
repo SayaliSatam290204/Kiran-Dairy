@@ -4,7 +4,7 @@ import Product from '../models/Product.js';
 import Shop from '../models/Shop.js';
 import { responseHelper } from '../utils/responseHelper.js';
 
-const STOCK_ALERT_THRESHOLD = 20; // ⚠️ Alert when stock falls to or below 20 units
+const STOCK_ALERT_THRESHOLD = 15; // ⚠️ Alert when stock falls to or below 15 units
 
 export const ledgerController = {
   // ✅ Get all ledger entries (admin view)
