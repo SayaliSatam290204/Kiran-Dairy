@@ -76,6 +76,12 @@ export const returnController = {
 
   // ✅ Create a return (shop -> pending)  [NO inventory update here]
   create: async (req, res) => {
+    
+    console.log("POST /api/return HIT");
+    console.log("User:", req.user);
+    console.log("RETURN CREATE API HIT");
+    console.log("BODY:", req.body);
+
     try {
       const { saleId, items } = req.body;
       const userRole = req.user.role;
@@ -212,12 +218,12 @@ export const returnController = {
         returnRecord.approvedBy = req.user.id;
 
         for (const item of returnRecord.items) {
-          // Increase inventory because return approved
+          // Decrease inventory because products are being returned to farm
           await inventoryService.updateInventory(
             returnRecord.shopId,
             item.productId,
-            item.quantity,
-            "return_in",
+            -item.quantity,
+            "return_out",
             returnRecord._id.toString()
           );
         }
@@ -231,11 +237,12 @@ export const returnController = {
       // If admin changes approved -> rejected, reverse inventory
       if (previousStatus === "approved" && status === "rejected") {
         for (const item of returnRecord.items) {
+          // Add back inventory since return is being rejected
           await inventoryService.updateInventory(
             returnRecord.shopId,
             item.productId,
-            -item.quantity,
-            "adjustment",
+            item.quantity,
+            "return_reversal",
             returnRecord._id.toString()
           );
         }

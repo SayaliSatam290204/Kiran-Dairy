@@ -1,29 +1,56 @@
-import express from 'express';
-import { returnController } from '../controllers/returnController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
-import { roleMiddleware } from '../middleware/roleMiddleware.js';
+import express from "express";
+import { returnController } from "../controllers/returnController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// Middleware to check if user is admin or shop manager
-const allowAdminAndShop = [authMiddleware, roleMiddleware(['admin', 'shop'])];
-
-// Get pending returns count (admin only - for notifications)
-router.get('/pending/count', authMiddleware, roleMiddleware(['admin']), returnController.getPendingCount);
+// Get pending returns count (admin only)
+router.get(
+  "/pending/count",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  returnController.getPendingCount
+);
 
 // Get all returns
-router.get('/', allowAdminAndShop, returnController.getAll);
+router.get(
+  "/",
+  authMiddleware,
+  roleMiddleware(["admin", "shop"]),
+  returnController.getAll
+);
 
 // Get return by ID
-router.get('/:id', allowAdminAndShop, returnController.getById);
+router.get(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin", "shop"]),
+  returnController.getById
+);
 
-// Create new return (shop manager creates returns)
-router.post('/', allowAdminAndShop, returnController.create);
+// Create new return
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware(["admin", "shop"]),
+  returnController.create
+);
 
-// Update return status (admin only)
-router.put('/:id/status', authMiddleware, roleMiddleware(['admin']), returnController.updateStatus);
+// Update return status
+router.put(
+  "/:id/status",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  returnController.updateStatus
+);
 
-// Delete return (only pending returns can be deleted)
-router.delete('/:id', allowAdminAndShop, returnController.deleteReturn);
+// Delete return
+router.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin", "shop"]),
+  returnController.deleteReturn
+);
 
 export default router;

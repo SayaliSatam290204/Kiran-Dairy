@@ -9,6 +9,7 @@ import { SetupRedirect } from "./pages/auth/SetupRedirect.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
+import { AdminProfile } from "./pages/admin/AdminProfile.jsx";
 import { BatchDispatch } from "./pages/admin/BatchDispatch.jsx";
 import { DispatchHistory } from "./pages/admin/DispatchHistory.jsx";
 import { DispatchAnalytics } from "./pages/admin/DispatchAnalytics.jsx";
@@ -69,6 +70,16 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <AdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout>
+                  <AdminProfile />
                 </AdminLayout>
               </ProtectedRoute>
             }

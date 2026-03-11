@@ -13,6 +13,9 @@ import { Bill } from "../Bill.jsx";
 export const POS = () => {
   const [products, setProducts] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
+  
+  const [activeTab, setActiveTab] = useState("products"); // "products" or "cart"
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const [cart, setCart] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -23,7 +26,11 @@ export const POS = () => {
   const [splitPayment, setSplitPayment] = useState(false);
   const [upiAmount, setUpiAmount] = useState(0);
   const [secondaryPayment, setSecondaryPayment] = useState("cash");
-  const [showScanner, setShowScanner] = useState(false);
+  
+  // UPI Request State
+  const [customerUpiId, setCustomerUpiId] = useState("");
+  const [isSendingUpi, setIsSendingUpi] = useState(false);
+  const [upiRequestSent, setUpiRequestSent] = useState(false);
 
   //  Card details state
   const [cardDetails, setCardDetails] = useState({
@@ -167,6 +174,19 @@ export const POS = () => {
     return map;
   }, [products]);
 
+  // ===== Categories & Filtering =====
+  const categories = useMemo(() => {
+    const cats = new Set(
+      products.map((p) => p.productId?.category).filter(Boolean)
+    );
+    return ["All", ...Array.from(cats)];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === "All") return products;
+    return products.filter((p) => p.productId?.category === selectedCategory);
+  }, [products, selectedCategory]);
+
   // ===== Cart actions =====
   const addToCart = (product) => {
     const pid = product.productId?._id;
@@ -269,17 +289,28 @@ export const POS = () => {
     </div>
   );
 
-  // Handle amount scanner input
-  const handleScannerInput = (value) => {
-    const amount = parseFloat(value);
-    if (!isNaN(amount) && amount > 0 && amount <= grandTotal) {
-      setUpiAmount(amount);
-      setShowScanner(false);
-      toast.success("Amount scanned: " + formatCurrency(amount));
+  // UPI Request Handler
+  const handleSendUpiRequest = () => {
+    if (!customerUpiId.trim()) {
+      return toast.error("Please enter a valid UPI ID (e.g. 9876543210@ybl)");
     }
-  };
+    const amountToRequest = paymentMethod === "split" ? upiAmount : grandTotal;
+    if (amountToRequest <= 0) {
+      return toast.error("Invalid payment amount");
+    }
 
-  const closeScanner = () => setShowScanner(false);
+    setIsSendingUpi(true);
+    setUpiRequestSent(false);
+
+    // Simulate sending payment request to customer
+    setTimeout(() => {
+      setIsSendingUpi(false);
+      setUpiRequestSent(true);
+      toast.success(
+        `Payment request of ${formatCurrency(amountToRequest)} sent to ${customerUpiId}!`
+      );
+    }, 1500);
+  };
 
   const handleCheckout = async () => {
     if (cart.length === 0) return toast.error("Cart is empty");
@@ -360,6 +391,8 @@ export const POS = () => {
       setPaymentMethod("cash");
       setSplitPayment(false);
       setUpiAmount(0);
+      setCustomerUpiId("");
+      setUpiRequestSent(false);
 
       // reset card details after successful sale
       setCardDetails({ cardNumber: "", nameOnCard: "", expiry: "", cvv: "" });
@@ -388,11 +421,57 @@ export const POS = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Products Grid */}
-          <div className="lg:col-span-4">
-            <Card title={`Available Products (${products.length})`}>
-              {products.length === 0 ? (
+        <>
+          {/* Mobile Tabs */}
+          <div className="lg:hidden flex bg-white border border-gray-200 rounded-lg p-1 mb-4 shadow-sm">
+            <button
+              onClick={() => setActiveTab("products")}
+              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${
+                activeTab === "products"
+                  ? "bg-blue-600 text-white shadow"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Products
+            </button>
+            <button
+              onClick={() => setActiveTab("cart")}
+              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors flex items-center justify-center gap-2 ${
+                activeTab === "cart"
+                  ? "bg-blue-600 text-white shadow"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Cart
+              <Badge variant={cart.length > 0 ? "blue" : "gray"} className={`${activeTab === 'cart' ? 'bg-white text-blue-600' : ''}`}>
+                {cart.length}
+              </Badge>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Products Grid */}
+            <div className={`lg:col-span-4 ${activeTab === "products" ? "block" : "hidden"} lg:block`}>
+              <Card title={`Available Products (${filteredProducts.length})`}>
+                
+                {/* Category Filter */}
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                        selectedCategory === cat
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredProducts.length === 0 ? (
                 <div className="text-center py-10">
                   <div className="text-lg font-semibold">
                     No products available
@@ -403,8 +482,8 @@ export const POS = () => {
                 </div>
               ) : (
                 //  GRID FORMAT WITH PRODUCT CARDS
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto">
-                  {products.map((product) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto pr-1">
+                  {filteredProducts.map((product) => {
                     const qty = product.quantity || 0;
                     const out = qty <= 0;
                     const img = getProductImage(product);
@@ -492,7 +571,7 @@ export const POS = () => {
           </div>
 
           {/* Cart Sidebar */}
-          <div>
+          <div className={`${activeTab === "cart" ? "block" : "hidden"} lg:block`}>
             <Card title={`Cart (${cart.length})`} className="sticky top-0">
               <div className="space-y-3">
                 {cart.length === 0 ? (
@@ -511,88 +590,90 @@ export const POS = () => {
                       const img = product
                         ? getProductImage(product)
                         : FALLBACK_IMG;
+                      const itemTotal = item.price * item.quantity;
 
                       return (
-                        <div key={item.productId} className="border-b pb-3 text-sm">
-                          <div className="flex gap-2 items-start">
+                        <div key={item.productId} className="border-b pb-3 last:border-b-0">
+                          <div className="flex gap-2 items-start mb-2">
                             <img
                               src={img}
                               alt={item.productName}
-                              className="w-10 h-10 rounded object-cover border flex-shrink-0"
+                              className="w-12 h-12 rounded object-cover border flex-shrink-0"
                               onError={(e) =>
                                 (e.currentTarget.src = FALLBACK_IMG)
                               }
                             />
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-1">
-                                <p className="font-semibold text-xs truncate">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="font-semibold text-xs line-clamp-2 flex-1">
                                   {item.productName}
                                 </p>
                                 <button
                                   onClick={() =>
                                     askRemoveFromCart(item.productId)
                                   }
-                                  className="text-red-600 text-xs hover:text-red-800 flex-shrink-0"
+                                  className="text-red-600 text-xs hover:text-red-800 flex-shrink-0 font-bold"
                                 >
                                   ✕
                                 </button>
                               </div>
-
-                              <div className="flex gap-1 items-center my-1">
-                                <button
-                                  className="px-1 py-0 border rounded text-xs h-6 w-6 flex items-center justify-center"
-                                  onClick={() =>
-                                    updateQuantity(
-                                      item.productId,
-                                      item.quantity - 1
-                                    )
-                                  }
-                                >
-                                  −
-                                </button>
-
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    updateQuantity(
-                                      item.productId,
-                                      parseInt(e.target.value) || 1
-                                    )
-                                  }
-                                  className="w-8 px-1 py-0 border rounded text-center text-xs h-6"
-                                />
-
-                                <button
-                                  className="px-1 py-0 border rounded text-xs h-6 w-6 flex items-center justify-center"
-                                  onClick={() =>
-                                    updateQuantity(
-                                      item.productId,
-                                      item.quantity + 1
-                                    )
-                                  }
-                                >
-                                  +
-                                </button>
-
-                                {item.quantity >= availableStock && (
-                                  <span className="text-xs text-red-600 ml-auto">
-                                    MAX
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex justify-between text-xs">
-                                <span className="text-gray-600">
-                                  {formatCurrency(item.price)} × {item.quantity}
-                                </span>
-                                <span className="font-bold">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </span>
+                              
+                              {/* Price Breakdown */}
+                              <div className="text-xs space-y-0.5 mt-1">
+                                <div className="flex justify-between text-gray-700">
+                                  <span>Price:</span>
+                                  <span className="font-semibold">{formatCurrency(item.price)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                  <span>Qty:</span>
+                                  <span className="font-semibold">{item.quantity}</span>
+                                </div>
+                                <div className="border-t pt-0.5 flex justify-between">
+                                  <span className="font-bold text-gray-900">Total:</span>
+                                  <span className="font-bold text-green-600 text-sm">{formatCurrency(itemTotal)}</span>
+                                </div>
                               </div>
                             </div>
+                          </div>
+
+                          {/* Quantity Controls - Compact Row */}
+                          <div className="flex gap-1 items-center justify-between mt-2">
+                            <div className="flex gap-1 items-center">
+                              <button
+                                className="px-1.5 py-0.5 border border-gray-300 rounded text-xs h-6 w-6 flex items-center justify-center hover:bg-gray-100 font-semibold"
+                                onClick={() =>
+                                  updateQuantity(
+                                    item.productId,
+                                    item.quantity - 1
+                                  )
+                                }
+                              >
+                                −
+                              </button>
+
+                              <span className="px-2 py-0.5 text-xs font-bold text-center min-w-[2rem] bg-gray-100 rounded">
+                                {item.quantity}
+                              </span>
+
+                              <button
+                                className="px-1.5 py-0.5 border border-gray-300 rounded text-xs h-6 w-6 flex items-center justify-center hover:bg-blue-100 font-semibold hover:text-blue-700"
+                                onClick={() =>
+                                  updateQuantity(
+                                    item.productId,
+                                    item.quantity + 1
+                                  )
+                                }
+                              >
+                                +
+                              </button>
+                            </div>
+                            
+                            {item.quantity >= availableStock && (
+                              <span className="text-xs text-red-600 font-semibold">
+                                MAX
+                              </span>
+                            )}
                           </div>
                         </div>
                       );
@@ -656,6 +737,7 @@ export const POS = () => {
             </Card>
           </div>
         </div>
+      </>
       )}
 
       {/* Checkout Modal */}
@@ -866,7 +948,7 @@ export const POS = () => {
                     key={provider.id}
                     onClick={() => {
                       setUpiProvider(provider.id);
-                      setShowScanner(true);
+                      setUpiRequestSent(false);
                     }}
                     className={`p-4 rounded-xl border-2 transition-all duration-200 text-center ${
                       upiProvider === provider.id
@@ -888,6 +970,54 @@ export const POS = () => {
                   </button>
                 ))}
               </div>
+              
+              {/* UPI ID Input for Request */}
+              {upiProvider && (
+                <div className="mt-5 pt-5 border-t border-blue-200">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Send Payment Request to Customer
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      placeholder="Enter customer UPI ID (e.g. 9876543210@paytm)"
+                      className="flex-1 px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500 font-medium"
+                      value={customerUpiId}
+                      onChange={(e) => {
+                        setCustomerUpiId(e.target.value);
+                        if (upiRequestSent) setUpiRequestSent(false);
+                      }}
+                      disabled={isSendingUpi || loading}
+                    />
+                    <button
+                      onClick={handleSendUpiRequest}
+                      disabled={!customerUpiId.trim() || isSendingUpi || loading || (paymentMethod === "split" && upiAmount <= 0) }
+                      className={`px-6 py-2.5 rounded-lg font-semibold text-white transition-all whitespace-nowrap ${
+                        !customerUpiId.trim() || isSendingUpi
+                          ? "bg-blue-300 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700 shadow-md"
+                      }`}
+                    >
+                      {isSendingUpi ? "Sending..." : "Send Request"}
+                    </button>
+                  </div>
+                  
+                  {/* Status Message */}
+                  {upiRequestSent && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 animate-fade-in">
+                      <div className="bg-green-100 p-1 rounded-full text-green-600 mt-0.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-green-800">Request Sent Successfully!</p>
+                        <p className="text-xs text-green-700 mt-0.5">
+                          Requested <strong>{formatCurrency(paymentMethod === "split" ? upiAmount : grandTotal)}</strong> from <span className="font-semibold">{customerUpiId}</span>. Please ask the customer to check their UPI app, approve the payment, and then click "Complete Payment" below.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -985,91 +1115,6 @@ export const POS = () => {
                     : "Complete Payment"}
                 </>
               )}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Amount Scanner Modal */}
-      <Modal
-        isOpen={showScanner}
-        title="Scan Amount"
-        onClose={closeScanner}
-        size="sm"
-      >
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-700">
-               Scan or enter the UPI amount
-            </p>
-          </div>
-
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-            <p className="text-xs text-gray-600 mb-1">Bill Total</p>
-            <p className="text-3xl font-bold text-blue-700">
-              {formatCurrency(grandTotal)}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              UPI Amount
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-gray-700">₹</span>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max={grandTotal}
-                autoFocus
-                placeholder={`Max: ${grandTotal}`}
-                className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-600 focus:outline-none text-xl font-semibold"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const amount = parseFloat(e.target.value);
-                    if (!isNaN(amount) && amount > 0 && amount <= grandTotal) {
-                      handleScannerInput(e.target.value);
-                    } else {
-                      toast.error(
-                        "Invalid amount. Must be between ₹1 and " +
-                          formatCurrency(grandTotal)
-                      );
-                    }
-                  }
-                }}
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Press Enter to confirm amount
-            </p>
-          </div>
-
-          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-            <p className="text-xs font-semibold text-gray-600 mb-2">
-              Quick Amounts
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[grandTotal * 0.25, grandTotal * 0.5, grandTotal * 0.75].map(
-                (amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleScannerInput(amount.toString())}
-                    className="px-2 py-2 bg-white border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-all"
-                  >
-                    {formatCurrency(amount)}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <button
-              onClick={closeScanner}
-              className="flex-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-all"
-            >
-              Close
             </button>
           </div>
         </div>

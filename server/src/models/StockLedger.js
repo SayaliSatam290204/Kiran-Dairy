@@ -1,20 +1,28 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const stockLedgerSchema = new mongoose.Schema(
   {
     shopId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Shop',
+      ref: "Shop",
       required: true
     },
     productId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
+      ref: "Product",
       required: true
     },
     transactionType: {
       type: String,
-      enum: ['dispatch_in', 'sale_out', 'return_in', 'adjustment', 'received'],
+      enum: [
+        "dispatch_in",
+        "sale_out",
+        "return_in",
+        "return_out",
+        "return_reversal",
+        "adjustment",
+        "received"
+      ],
       required: true
     },
     quantity: {
@@ -27,12 +35,12 @@ const stockLedgerSchema = new mongoose.Schema(
     },
     referenceType: {
       type: String,
-      enum: ['dispatch', 'sale', 'return', 'adjustment', null],
+      enum: ["dispatch", "sale", "return", "adjustment", null],
       default: null
     },
     notes: {
       type: String,
-      default: ''
+      default: ""
     },
     transactionDate: {
       type: Date,
@@ -42,4 +50,4 @@ const stockLedgerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model('StockLedger', stockLedgerSchema);
+export default mongoose.model("StockLedger", stockLedgerSchema);

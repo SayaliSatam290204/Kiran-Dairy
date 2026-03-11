@@ -13,7 +13,7 @@ export const Login = () => {
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export const Login = () => {
         setEmail("admin@kiran-dairy.com");
         setPassword("admin123");
       } else {
-        setPhone("Kiran-Dairy-Mumbai"); // Shop name as username
+        setUsername("Kiran-Dairy-Mumbai");
         setPassword("demo123");
       }
     }
@@ -40,7 +40,7 @@ export const Login = () => {
   const handleBackToRoleSelect = () => {
     setSelectedRole(null);
     setEmail("");
-    setPhone("");
+    setUsername("");
     setPassword("");
     setError("");
     setShowPassword(false);
@@ -56,7 +56,7 @@ export const Login = () => {
     try {
       const response = await authApi.login({
         email: selectedRole === "admin" ? email : undefined,
-        phone: selectedRole === "shop" ? phone : undefined,
+        username: selectedRole === "shop" ? username : undefined,
         password
       });
 
@@ -71,8 +71,7 @@ export const Login = () => {
         return;
       }
 
-      // Log the user data before storing (for debugging)
-      console.log('Login successful. User data:', user);
+      console.log("Login successful. User data:", user);
 
       login(user, token);
 
@@ -92,7 +91,6 @@ export const Login = () => {
     }
   };
 
-  // Role Selection View
   if (!selectedRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -122,7 +120,6 @@ export const Login = () => {
     );
   }
 
-  // Login Form View
   const textColor = selectedRole === "admin" ? "blue" : "green";
   const bgColor = selectedRole === "admin" ? "bg-blue-50" : "bg-green-50";
   const buttonColor =
@@ -158,8 +155,8 @@ export const Login = () => {
               label="Shop Name (Username)"
               type="text"
               placeholder="Enter shop name"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
             />

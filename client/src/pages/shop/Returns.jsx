@@ -24,7 +24,6 @@ export const Returns = () => {
   const [inventory, setInventory] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
-  // Form state
   const [selectedItems, setSelectedItems] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -51,30 +50,35 @@ export const Returns = () => {
       setInventory(response.data.data || []);
     } catch (error) {
       console.error("Failed to fetch inventory:", error);
+      toast.error(error.response?.data?.message || "Failed to load inventory");
     }
   };
 
   const handleAddItem = () => {
-    setSelectedItems([
-      ...selectedItems,
+    setSelectedItems((prev) => [
+      ...prev,
       { productId: "", quantity: 0, reason: "damaged" }
     ]);
   };
 
   const handleRemoveItem = (index) => {
-    setSelectedItems(selectedItems.filter((_, i) => i !== index));
+    setSelectedItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleItemChange = (index, field, value) => {
-    const updated = [...selectedItems];
-    updated[index][field] = value;
-    setSelectedItems(updated);
+    setSelectedItems((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value
+      };
+      return updated;
+    });
   };
 
   const handleSubmitReturn = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (selectedItems.length === 0) {
       toast.error("Please add at least one item");
       return;
@@ -85,19 +89,40 @@ export const Returns = () => {
         toast.error("Please fill all item details");
         return;
       }
+
+      const inventoryRow = inventory.find(
+        (inv) => inv.productId?._id === item.productId
+      );
+
+      if (!inventoryRow) {
+        toast.error("Selected product not found in inventory");
+        return;
+      }
+
+      if (item.quantity > (inventoryRow.quantity || 0)) {
+        toast.error(
+          `Return quantity cannot exceed stock for ${inventoryRow.productId?.name || "selected product"}`
+        );
+        return;
+      }
     }
 
     setSubmitting(true);
 
     try {
       await returnApi.create({
-        items: selectedItems
+        items: selectedItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          reason: item.reason
+        }))
       });
 
       toast.success("Return request submitted successfully");
       setShowModal(false);
       setSelectedItems([]);
       fetchReturns();
+      fetchInventory();
     } catch (error) {
       console.error("Error creating return:", error);
       toast.error(error.response?.data?.message || "Failed to create return");
@@ -108,7 +133,6 @@ export const Returns = () => {
 
   const columns = [
     { key: "returnNo", label: "Return No" },
-
     {
       key: "status",
       label: "Status",
@@ -118,15 +142,13 @@ export const Returns = () => {
         return <Badge variant={v}>{String(val || "-").toUpperCase()}</Badge>;
       }
     },
-
     {
-      key: "items",
+      key: "itemCount",
       label: "Items",
       render: (items) => (Array.isArray(items) ? items.length : 0)
     },
-
     {
-      key: "items",
+      key: "products",
       label: "Products",
       render: (items) =>
         Array.isArray(items) && items.length
@@ -135,9 +157,8 @@ export const Returns = () => {
               .join(" | ")
           : "—"
     },
-
     {
-      key: "items",
+      key: "reasons",
       label: "Reasons",
       render: (items) =>
         Array.isArray(items) && items.length
@@ -149,13 +170,11 @@ export const Returns = () => {
               .join(", ")
           : "—"
     },
-
     {
       key: "totalRefund",
       label: "Refund Amount",
       render: (val) => formatCurrency(val || 0)
     },
-
     {
       key: "returnDate",
       label: "Date",
@@ -189,7 +208,8 @@ export const Returns = () => {
               <div>
                 <div className="text-lg font-semibold">No returns yet</div>
                 <div className="text-sm mt-1">
-                  Click "Create Return Request" to submit a return for damaged, expired, or excess products.
+                  Click "Create Return Request" to submit a return for damaged,
+                  expired, or excess products.
                 </div>
               </div>
             }
@@ -197,7 +217,6 @@ export const Returns = () => {
         )}
       </Card>
 
-      {/* Create Return Modal */}
       {showModal && (
         <Modal
           isOpen={showModal}
@@ -210,11 +229,12 @@ export const Returns = () => {
           <form onSubmit={handleSubmitReturn} className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-700">
-                💡 <strong>Select products</strong> from your inventory that need to be returned due to damage, expiration, or excess stock. Admin will review and approve your request.
+                💡 <strong>Select products</strong> from your inventory that need
+                to be returned due to damage, expiration, or excess stock. Admin
+                will review and approve your request.
               </p>
             </div>
 
-            {/* Items List */}
             <div className="space-y-4">
               {selectedItems.map((item, index) => (
                 <div
@@ -245,11 +265,16 @@ export const Returns = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select product...</option>
-                      {inventory.map((inv) => (
-                        <option key={inv._id} value={inv._id}>
-                          {inv.productId?.name || "Unknown"} (Stock: {inv.quantity})
-                        </option>
-                      ))}
+                      {inventory
+                        .filter((inv) => inv.productId?._id)
+                        .map((inv) => (
+                          <option
+                            key={inv.productId._id}
+                            value={inv.productId._id}
+                          >
+                            {inv.productId?.name || "Unknown"} (Stock: {inv.quantity})
+                          </option>
+                        ))}
                     </select>
                   </div>
 
@@ -265,7 +290,7 @@ export const Returns = () => {
                           handleItemChange(
                             index,
                             "quantity",
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value, 10) || 0
                           )
                         }
                         min="1"
@@ -299,7 +324,6 @@ export const Returns = () => {
               ))}
             </div>
 
-            {/* Add Item Button */}
             <button
               type="button"
               onClick={handleAddItem}
@@ -308,7 +332,6 @@ export const Returns = () => {
               + Add Another Item
             </button>
 
-            {/* Form Actions */}
             <div className="flex gap-3 pt-6 border-t border-gray-200">
               <Button
                 type="submit"

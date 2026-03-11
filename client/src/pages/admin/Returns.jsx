@@ -26,6 +26,7 @@ export const Returns = () => {
     isOpen: false,
     type: null, // 'approve' or 'reject'
     returnId: null,
+    returnData: null,
     rejectionReason: ""
   });
 
@@ -50,10 +51,12 @@ export const Returns = () => {
   };
 
   const handleActionClick = (returnId, action) => {
+    const returnData = returns.find(r => r._id === returnId);
     setActionModal({
       isOpen: true,
       type: action,
       returnId,
+      returnData,
       rejectionReason: ""
     });
   };
@@ -82,7 +85,7 @@ export const Returns = () => {
         }`
       );
 
-      setActionModal({ isOpen: false, type: null, returnId: null, rejectionReason: "" });
+      setActionModal({ isOpen: false, type: null, returnId: null, returnData: null, rejectionReason: "" });
       fetchReturns();
     } catch (error) {
       console.error("Error processing return:", error);
@@ -121,13 +124,13 @@ export const Returns = () => {
     },
 
     {
-      key: "items",
+      key: "itemCount",
       label: "Items",
       render: (items) => (Array.isArray(items) ? items.length : 0)
     },
 
     {
-      key: "items",
+      key: "products",
       label: "Products",
       render: (items) =>
         Array.isArray(items) && items.length
@@ -138,7 +141,7 @@ export const Returns = () => {
     },
 
     {
-      key: "items",
+      key: "reasons",
       label: "Reasons",
       render: (items) =>
         Array.isArray(items) && items.length
@@ -244,7 +247,7 @@ export const Returns = () => {
         <Modal
           isOpen={actionModal.isOpen}
           onClose={() =>
-            setActionModal({ isOpen: false, type: null, returnId: null, rejectionReason: "" })
+            setActionModal({ isOpen: false, type: null, returnId: null, returnData: null, rejectionReason: "" })
           }
           title={
             actionModal.type === "approve"
@@ -253,11 +256,34 @@ export const Returns = () => {
           }
         >
           <div className="space-y-4">
+            {/* Products Summary */}
+            {actionModal.returnData?.items && actionModal.returnData.items.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Return Products</h3>
+                <div className="space-y-2">
+                  {actionModal.returnData.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-start text-sm">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{item?.productId?.name || "Product"}</p>
+                        <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                        <p className="text-xs text-gray-600">Reason: <span className="font-semibold">{RETURN_REASONS[item.reason] || item.reason}</span></p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-gray-300 mt-3 pt-3">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Refund Amount: {formatCurrency(actionModal.returnData.totalRefund || 0)}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {actionModal.type === "approve" ? (
               <>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-sm text-green-700">
-                    ✓ This will <strong>approve the return</strong> and add the products back to the shop's inventory.
+                    ✓ This will <strong>approve the return</strong> and remove the returned products from the shop's inventory (products go back to farm).
                   </p>
                 </div>
 
@@ -276,6 +302,7 @@ export const Returns = () => {
                         isOpen: false,
                         type: null,
                         returnId: null,
+                        returnData: null,
                         rejectionReason: ""
                       })
                     }
@@ -326,6 +353,7 @@ export const Returns = () => {
                         isOpen: false,
                         type: null,
                         returnId: null,
+                        returnData: null,
                         rejectionReason: ""
                       })
                     }

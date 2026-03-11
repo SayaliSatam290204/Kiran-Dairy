@@ -7,20 +7,27 @@ const userSchema = new mongoose.Schema(
       required: true
     },
 
-    // ✅ Admin uses email, Shop can have email null
     email: {
       type: String,
       unique: true,
-      sparse: true, // ✅ allows multiple null emails
+      sparse: true,
       trim: true,
       default: null
     },
 
-    // ✅ Shop uses phone as username
     phone: {
       type: String,
       unique: true,
-      sparse: true, // ✅ allows multiple null phones
+      sparse: true,
+      trim: true,
+      default: null
+    },
+
+    // ✅ Shop username
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
       trim: true,
       default: null
     },

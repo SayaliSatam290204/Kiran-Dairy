@@ -49,7 +49,7 @@ export const Shops = () => {
         contactNo: shop.contactNo || "",
         email: shop.email || "",
         address: shop.address || "",
-        password: "", // not editing password here
+        password: "",
         isActive: shop.isActive ?? true
       });
     } else {
@@ -86,18 +86,15 @@ export const Shops = () => {
   const handleChangeForm = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [name]: type === "checkbox" ? checked : value
-      };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // basic validations
     if (
       !formData.name ||
       !formData.location ||
@@ -109,13 +106,11 @@ export const Shops = () => {
       return toast.error("Please fill all required fields");
     }
 
-    // phone validation (simple)
     const digitsOnly = formData.contactNo.replace(/\D/g, "");
     if (digitsOnly.length !== 10) {
       return toast.error("Contact number must be 10 digits");
     }
 
-    // password required when creating
     if (!editingId && !formData.password) {
       return toast.error("Please set a password for the shop");
     }
@@ -170,7 +165,7 @@ export const Shops = () => {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Name</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Shop Name / Username</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Owner</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Location</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
@@ -226,20 +221,56 @@ export const Shops = () => {
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Shop Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Shop Name (Username) *" name="name" value={formData.name} onChange={handleChangeForm} required className="mb-0" />
-                <Input label="Location *" name="location" value={formData.location} onChange={handleChangeForm} required className="mb-0" />
+                <Input
+                  label="Shop Name (Username) *"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChangeForm}
+                  required
+                  className="mb-0"
+                />
+                <Input
+                  label="Location *"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChangeForm}
+                  required
+                  className="mb-0"
+                />
               </div>
             </div>
 
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Owner Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Owner Name *" name="ownerName" value={formData.ownerName} onChange={handleChangeForm} required className="mb-0" />
-                <Input label="Email *" name="email" type="email" value={formData.email} onChange={handleChangeForm} required className="mb-0" />
+                <Input
+                  label="Owner Name *"
+                  name="ownerName"
+                  value={formData.ownerName}
+                  onChange={handleChangeForm}
+                  required
+                  className="mb-0"
+                />
+                <Input
+                  label="Email *"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChangeForm}
+                  required
+                  className="mb-0"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <Input label="Phone Number *" name="contactNo" value={formData.contactNo} onChange={handleChangeForm} required className="mb-0" />
+                <Input
+                  label="Phone Number *"
+                  name="contactNo"
+                  value={formData.contactNo}
+                  onChange={handleChangeForm}
+                  required
+                  className="mb-0"
+                />
                 <Input
                   label="Password *"
                   name="password"

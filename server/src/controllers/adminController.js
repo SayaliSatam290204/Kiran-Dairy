@@ -168,10 +168,6 @@ export const adminController = {
         .sort("-createdAt")
         .lean();
 
-      if (!shops || shops.length === 0) {
-        console.log("No shops found in database");
-      }
-
       responseHelper.success(res, shops || [], "All shops fetched successfully");
     } catch (error) {
       console.error("Error fetching shops:", error);
@@ -179,38 +175,47 @@ export const adminController = {
     }
   },
 
-  // ✅ Create new shop (Shop login: name = username, password = admin-set)
+  // ✅ Create new shop (Username = Shop Name, Password = admin-set)
   createShop: async (req, res) => {
     try {
-      const { name, location, ownerName, contactNo, email, address, password, isActive } = req.body;
+      const {
+        name,
+        location,
+        ownerName,
+        contactNo,
+        email,
+        address,
+        password,
+        isActive
+      } = req.body;
 
-      // ✅ Validate required fields
       if (!name || !location || !ownerName || !contactNo || !email || !address || !password) {
         return responseHelper.error(res, "All fields including password are required", 400);
       }
 
-      // ✅ Normalize phone
       const phone = String(contactNo).trim();
+      const username = String(name).trim();
 
-      // ✅ Check if shop email already exists
       const existingShopByEmail = await Shop.findOne({ email });
       if (existingShopByEmail) {
         return responseHelper.error(res, "Shop with this email already exists", 400);
       }
 
-      // ✅ Check if shop contactNo already exists
       const existingShopByPhone = await Shop.findOne({ contactNo: phone });
       if (existingShopByPhone) {
         return responseHelper.error(res, "Shop with this contact number already exists", 400);
       }
 
-      // ✅ Check if user with shop name already exists (username = shop name)
-      const existingUserByName = await User.findOne({ phone: name });
-      if (existingUserByName) {
+      const existingUserByEmail = await User.findOne({ email });
+      if (existingUserByEmail) {
+        return responseHelper.error(res, "User account with this email already exists", 400);
+      }
+
+      const existingUserByUsername = await User.findOne({ username });
+      if (existingUserByUsername) {
         return responseHelper.error(res, "Username (Shop name) already exists", 400);
       }
 
-      // ✅ Create shop
       const shop = await Shop.create({
         name,
         location,
@@ -221,14 +226,13 @@ export const adminController = {
         isActive: isActive ?? true
       });
 
-      // ✅ Hash admin-set password
       const hashedPassword = await bcryptjs.hash(password, 10);
 
-      // ✅ Create shop user (store shop name as username in phone field)
       const user = await User.create({
         name: ownerName,
         email,
-        phone: name,       // ✅ username = shop name
+        phone,
+        username, // ✅ proper username field
         password: hashedPassword,
         role: "shop",
         shopId: shop._id,
@@ -243,7 +247,8 @@ export const adminController = {
             id: user._id,
             name: user.name,
             email: user.email,
-            username: name,  // ✅ shop name is username
+            phone: user.phone,
+            username: user.username,
             role: user.role
           }
         },
@@ -254,8 +259,7 @@ export const adminController = {
       console.error("Error creating shop:", error);
 
       if (error.code === 11000) {
-        // duplicate key error (email/phone unique)
-        return responseHelper.error(res, "Email/Phone already exists", 400);
+        return responseHelper.error(res, "Email / Phone / Username already exists", 400);
       }
       return responseHelper.error(res, "Failed to create shop", 500);
     }
@@ -273,15 +277,32 @@ export const adminController = {
       const shop = await Shop.findById(id);
       if (!shop) return responseHelper.error(res, "Shop not found", 404);
 
+      const user = await User.findOne({ shopId: id });
+
       if (email && email !== shop.email) {
         const existingShop = await Shop.findOne({ email });
         if (existingShop) return responseHelper.error(res, "Email already exists", 400);
+
+        const existingUserEmail = await User.findOne({ email, _id: { $ne: user?._id } });
+        if (existingUserEmail) return responseHelper.error(res, "User email already exists", 400);
       }
 
-      // ✅ also protect contactNo duplicates if changed
       if (contactNo && contactNo !== shop.contactNo) {
         const existingShopPhone = await Shop.findOne({ contactNo });
         if (existingShopPhone) return responseHelper.error(res, "Contact number already exists", 400);
+
+        const existingUserPhone = await User.findOne({ phone: contactNo, _id: { $ne: user?._id } });
+        if (existingUserPhone) return responseHelper.error(res, "User phone already exists", 400);
+      }
+
+      if (name && name !== shop.name) {
+        const existingUsername = await User.findOne({
+          username: name,
+          _id: { $ne: user?._id }
+        });
+        if (existingUsername) {
+          return responseHelper.error(res, "Username (Shop name) already exists", 400);
+        }
       }
 
       if (name) shop.name = name;
@@ -294,14 +315,19 @@ export const adminController = {
 
       await shop.save();
 
-      // ✅ Update user password if provided
-      if (password) {
-        const user = await User.findOne({ shopId: id });
-        if (user) {
+      if (user) {
+        if (ownerName) user.name = ownerName;
+        if (email) user.email = email;
+        if (contactNo) user.phone = contactNo;
+        if (name) user.username = name;
+        if (isActive !== undefined) user.isActive = isActive;
+
+        if (password) {
           const hashedPassword = await bcryptjs.hash(password, 10);
           user.password = hashedPassword;
-          await user.save();
         }
+
+        await user.save();
       }
 
       responseHelper.success(res, shop, "Shop updated successfully");
@@ -333,7 +359,9 @@ export const adminController = {
         );
       }
 
+      await User.findOneAndDelete({ shopId: id });
       await Shop.findByIdAndDelete(id);
+
       responseHelper.success(res, null, "Shop deleted successfully");
     } catch (error) {
       console.error("Error deleting shop:", error);
@@ -341,14 +369,12 @@ export const adminController = {
     }
   },
 
-  // ✅ Get all shops with their inventory (Shop Ledger)
   getShopsWithInventory: async (req, res) => {
     try {
       const shops = await Shop.find({ isActive: true })
         .select("_id name location ownerName contactNo")
         .sort("-createdAt");
 
-      // For each shop, fetch inventory
       const shopsWithInventory = await Promise.all(
         shops.map(async (shop) => {
           const inventory = await Inventory.find({ shopId: shop._id })
@@ -375,7 +401,6 @@ export const adminController = {
     }
   },
 
-  // ✅ Get single shop inventory
   getShopInventory: async (req, res) => {
     try {
       const { shopId } = req.params;
@@ -400,7 +425,6 @@ export const adminController = {
     }
   },
 
-  // ✅ Add or update product to shop inventory (Admin adds new product to shop)
   addProductToShop: async (req, res) => {
     try {
       const { shopId } = req.params;
@@ -414,29 +438,24 @@ export const adminController = {
         );
       }
 
-      // Verify shop exists
       const shop = await Shop.findById(shopId);
       if (!shop) {
         return responseHelper.error(res, "Shop not found", 404);
       }
 
-      // Verify product exists
       const product = await Product.findById(productId);
       if (!product) {
         return responseHelper.error(res, "Product not found", 404);
       }
 
-      // Check if inventory already exists for this shop-product combination
       const existingInventory = await Inventory.findOne({ shopId, productId });
 
       let inventory;
       if (existingInventory) {
-        // Update existing inventory
         existingInventory.quantity = quantity;
         existingInventory.lastUpdated = new Date();
         inventory = await existingInventory.save();
       } else {
-        // Create new inventory
         inventory = new Inventory({
           shopId,
           productId,
@@ -459,7 +478,6 @@ export const adminController = {
     }
   },
 
-  // ✅ Create new product (for onboarding new dairy products)
   createProduct: async (req, res) => {
     try {
       const { name, sku, description, price, unit, category, imageUrl } = req.body;
@@ -472,7 +490,6 @@ export const adminController = {
         );
       }
 
-      // Check if SKU already exists
       const existingProduct = await Product.findOne({ sku });
       if (existingProduct) {
         return responseHelper.error(
@@ -502,7 +519,6 @@ export const adminController = {
     }
   },
 
-  // ✅ Get all products (for dropdown in add product modal)
   getAllProducts: async (req, res) => {
     try {
       const products = await Product.find({ isActive: true })
@@ -516,7 +532,6 @@ export const adminController = {
     }
   },
 
-  // ✅ Update product details (edit product info)
   updateProduct: async (req, res) => {
     try {
       const { productId } = req.params;

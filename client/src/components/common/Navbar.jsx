@@ -68,6 +68,18 @@ export const Navbar = () => {
                 <div className="text-xs text-gray-500">{user?.email || ""}</div>
               </div>
 
+              {user?.role === "admin" && (
+                <button
+                  onClick={() => {
+                    navigate("/admin/profile");
+                    setMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-900 font-medium"
+                >
+                  👤 Profile
+                </button>
+              )}
+
               <button
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-3 hover:bg-gray-50 text-red-600 font-medium"

@@ -11,18 +11,18 @@ const signToken = (user) => {
 };
 
 export const authController = {
-  // ✅ LOGIN (Admin: email + password) | (Shop: phone + password)
+  // ✅ LOGIN (Admin: email + password) | (Shop: username + password)
   login: async (req, res) => {
     try {
-      const { email, phone, password } = req.body;
+      const { email, username, password } = req.body;
 
-      if (!password || (!email && !phone)) {
+      if (!password || (!email && !username)) {
         return res
           .status(400)
-          .json({ message: "Email/Phone and password are required" });
+          .json({ message: "Email/Username and password are required" });
       }
 
-      const query = email ? { email } : { phone };
+      const query = email ? { email } : { username };
 
       const user = await User.findOne(query).select("+password");
 
@@ -50,12 +50,13 @@ export const authController = {
             name: user.name,
             email: user.email || null,
             phone: user.phone || null,
+            username: user.username || null,
             role: user.role,
             shopId: user.shopId,
-            isActive: user.isActive,
+            isActive: user.isActive
           },
-          token,
-        },
+          token
+        }
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -68,16 +69,14 @@ export const authController = {
       const count = await User.countDocuments({ role: "admin" });
 
       return res.json({
-        exists: count > 0,
+        exists: count > 0
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
   },
 
-  /**
-   * ✅ ADMIN REGISTER ONLY
-   */
+  // ✅ ADMIN REGISTER ONLY
   registerAdmin: async (req, res) => {
     try {
       const { name, email, password, adminKey } = req.body;
@@ -112,10 +111,11 @@ export const authController = {
         name,
         email,
         phone: null,
+        username: null,
         password: hashedPassword,
         role: "admin",
         shopId: null,
-        isActive: true,
+        isActive: true
       });
 
       const token = signToken(user);
@@ -128,12 +128,13 @@ export const authController = {
             name: user.name,
             email: user.email,
             phone: null,
+            username: null,
             role: user.role,
             shopId: null,
-            isActive: user.isActive,
+            isActive: user.isActive
           },
-          token,
-        },
+          token
+        }
       });
     } catch (error) {
       if (error.code === 11000) {
@@ -141,5 +142,5 @@ export const authController = {
       }
       res.status(500).json({ message: error.message });
     }
-  },
+  }
 };
