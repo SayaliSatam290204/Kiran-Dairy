@@ -53,7 +53,8 @@ export const authController = {
             username: user.username || null,
             role: user.role,
             shopId: user.shopId,
-            isActive: user.isActive
+            isActive: user.isActive,
+            createdAt: user.createdAt
           },
           token
         }

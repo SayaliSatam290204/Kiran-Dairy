@@ -217,7 +217,9 @@ export const AdminProfile = () => {
           <div>
             <p className="text-sm text-gray-600">Joined</p>
             <p className="font-semibold text-gray-900 mt-1">
-              {new Date().toLocaleDateString("en-IN")}
+              {user?.createdAt
+                ? new Date(user.createdAt).toLocaleDateString("en-IN")
+                : "N/A"}
             </p>
           </div>
         </div>

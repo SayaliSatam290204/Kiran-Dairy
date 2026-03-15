@@ -36,19 +36,8 @@ export const dispatchController = {
       const dispatch = new Dispatch(dispatchData);
       await dispatch.save();
 
-      // Create stock ledger entries for each item and each shop
-      const shopsToProcess = isBatchDispatch ? shopIds : [shopId];
-      for (const currentShopId of shopsToProcess) {
-        for (const item of items) {
-          await inventoryService.updateInventory(
-            currentShopId,
-            item.productId,
-            item.quantity,
-            'dispatch_in',
-            dispatch._id.toString()
-          );
-        }
-      }
+      // ✅ DO NOT update inventory here - wait until shop confirms
+      // Inventory will be updated when dispatch status changes to 'received'
 
       await dispatch.populate('shopId', 'name location');
       if (isBatchDispatch) {
@@ -164,6 +153,20 @@ export const dispatchController = {
 
         if (confirmedBy) {
           dispatch.confirmedBy = confirmedBy;
+        }
+
+        // ✅ Update inventory ONLY when shop confirms receipt
+        const shopsToProcess = dispatch.isBatchDispatch ? dispatch.shopIds : [dispatch.shopId];
+        for (const currentShopId of shopsToProcess) {
+          for (const item of dispatch.items) {
+            await inventoryService.updateInventory(
+              currentShopId,
+              item.productId,
+              item.quantity,
+              'received',
+              dispatch._id.toString()
+            );
+          }
         }
       }
 

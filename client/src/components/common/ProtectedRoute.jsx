@@ -3,6 +3,13 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
 import { Skeleton } from "../ui/Skeleton.jsx";
 
+/**
+ * ProtectedRoute Component
+ * Handles role-based access control and authentication checks
+ * - Redirects unauthorized users silently (no console logs)
+ * - Shows loading skeleton while auth state loads
+ * - Supports role-based rendering
+ */
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
 
@@ -37,15 +44,11 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // Validate user has required fields
   if (!user.role) {
-    console.error('User object missing role field:', user);
     return <Navigate to="/login" replace />;
   }
 
-  // Check role authorization
+  // Check role authorization - silently redirect without logging
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    console.warn(
-      `User role '${user.role}' not in allowed roles ${JSON.stringify(allowedRoles)}`
-    );
     return <Navigate to="/unauthorized" replace />;
   }
 

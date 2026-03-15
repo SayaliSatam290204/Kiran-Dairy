@@ -1,46 +1,53 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useRef } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const initializationComplete = useRef(false);
 
-  // Initialize auth from localStorage on mount
+  // Initialize auth from localStorage on mount - ONLY ONCE
   useEffect(() => {
+    if (initializationComplete.current) return;
+    initializationComplete.current = true;
+
     const initializeAuth = () => {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      
-      if (token && userData) {
-        try {
+      try {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+        
+        // CRITICAL: Both token AND user data must exist
+        if (token && userData) {
           const parsedUser = JSON.parse(userData);
           
-          // Validate that user has required fields
-          if (parsedUser && parsedUser.id && parsedUser.role) {
+          // ✅ Validate required fields
+          if (parsedUser?.id && parsedUser?.role) {
             setUser(parsedUser);
           } else {
-            console.warn('Invalid user object structure:', parsedUser);
+            // Invalid structure - clear everything
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             setUser(null);
           }
-        } catch (error) {
-          console.error('Failed to parse user data:', error);
+        } else {
+          // No session - ensure everything is cleared
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);
         }
-      } else {
-        // No token or user data, clear both to stay in sync
+      } catch (error) {
+        // Parse error or any other error - clear everything
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
+      } finally {
+        // Always mark loading as complete
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
+    // Initialize auth immediately and synchronously
     initializeAuth();
   }, []);
 
@@ -89,7 +96,8 @@ export const AuthProvider = ({ children }) => {
       phone: userData.phone || null,
       role: userData.role, // CRITICAL: role must be present
       shopId: userData.shopId || null,
-      isActive: userData.isActive !== false
+      isActive: userData.isActive !== false,
+      createdAt: userData.createdAt || null
     };
 
     localStorage.setItem('token', token);

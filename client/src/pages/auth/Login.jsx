@@ -105,7 +105,7 @@ export const Login = () => {
               onClick={() => handleRoleSelect("admin")}
               className="w-full text-center bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
             >
-              <span className="block">▲ Login as Admin</span>
+              <span className="block"> Login as Admin</span>
             </button>
 
             <button

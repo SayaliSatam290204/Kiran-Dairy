@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { Login } from "./pages/auth/Login.jsx";
 import { AdminRegister } from "./pages/auth/AdminRegister.jsx";
 import { SetupRedirect } from "./pages/auth/SetupRedirect.jsx";
+import { Logout } from "./pages/auth/Logout.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
@@ -61,6 +62,7 @@ function App() {
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
+          <Route path="/logout" element={<Logout />} />
           <Route path="/admin/register" element={<AdminRegister />} />
 
           {/* Admin */}
