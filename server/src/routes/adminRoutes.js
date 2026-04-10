@@ -23,6 +23,10 @@ router.get("/all-products", authMiddleware, roleMiddleware("admin"), adminContro
 router.post("/products", authMiddleware, roleMiddleware("admin"), adminController.createProduct);
 router.put("/products/:productId", authMiddleware, roleMiddleware("admin"), adminController.updateProduct);
 
+// ✅ NEW: Category & Unit Management Routes
+router.get('/categories', authMiddleware, adminController.getCategories);
+router.get('/units', authMiddleware, adminController.getUnits);
+
 // Existing routes
 router.get("/products", authMiddleware, roleMiddleware("admin"), adminController.getProducts);
 router.get("/staff-performance", authMiddleware, roleMiddleware("admin"), adminController.getStaffPerformance);

@@ -31,22 +31,11 @@ const productSchema = new mongoose.Schema(
 
     unit: {
       type: String,
-      enum: ["liter", "kg", "piece", "dozen"],
       required: true,
     },
 
     category: {
       type: String,
-      enum: [
-        "Liquid Milk",
-        "Fermented Products",
-        "Fat-rich Products",
-        "Cheese & Paneer",
-        "Sweet Products",
-        "Frozen Dairy",
-        "Powdered Dairy",
-        "Value-added / Flavored"
-      ],
       required: true,
     },
 

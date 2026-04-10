@@ -6,6 +6,8 @@ import Product from "../models/Product.js";
 import Staff from "../models/Staff.js";
 import Sale from "../models/Sale.js";
 import User from "../models/User.js";
+import Category from "../models/Category.js";
+import Unit from "../models/Unit.js";
 import bcryptjs from "bcryptjs";
 import { staffPerformanceService } from "../services/staffPerformanceService.js";
 import { responseHelper } from "../utils/responseHelper.js";
@@ -554,6 +556,26 @@ export const adminController = {
     } catch (error) {
       console.error("Error updating product:", error);
       responseHelper.error(res, "Failed to update product", 500);
+    }
+  },
+
+  getCategories: async (req, res) => {
+    try {
+      const categories = await Category.find({ isActive: true }).sort("name");
+      responseHelper.success(res, categories, "Categories fetched successfully");
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      responseHelper.error(res, "Failed to fetch categories", 500);
+    }
+  },
+
+  getUnits: async (req, res) => {
+    try {
+      const units = await Unit.find({ isActive: true }).sort("name");
+      responseHelper.success(res, units, "Units fetched successfully");
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      responseHelper.error(res, "Failed to fetch units", 500);
     }
   }
 };

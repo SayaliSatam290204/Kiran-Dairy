@@ -172,7 +172,12 @@ Kiran-Dairy/
 
 ### Auth
 - POST `/api/auth/login` - User login
-- POST `/api/auth/register` - User registration
+- POST `/api/auth/register` - User registration (supports both `admin` and `shop` roles; shop signup creates a Shop record)
+
+
+**Client pages**
+- `/login` – combined login for admin/shop
+- `/register` – new registration page with role selector
 
 ### Admin
 - GET `/api/admin/dashboard` - Admin dashboard data

@@ -38,24 +38,33 @@ export const Products = () => {
     return FALLBACK_IMG;
   };
 
-  // Fetch products
+  const [categories, setCategories] = useState(['All']);
+
+  // Fetch products and categories
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await adminApi.getAllProducts();
-        const data = response.data?.data || [];
-        setProducts(data);
-        filterProducts(data, searchQuery, selectedCategory);
+        const [prodRes, catRes] = await Promise.all([
+          adminApi.getAllProducts(),
+          adminApi.getCategories()
+        ]);
+
+        const prodData = prodRes.data?.data || [];
+        const catData = catRes.data?.data || [];
+
+        setProducts(prodData);
+        setCategories(['All', ...catData.map(c => c.name)]);
+        filterProducts(prodData, searchQuery, selectedCategory);
       } catch (error) {
-        console.error('Failed to fetch products:', error);
-        toast.error(error.response?.data?.message || 'Failed to load products');
+        console.error('Failed to fetch product data:', error);
+        toast.error('Failed to load products or categories');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   // Filter products
@@ -70,7 +79,7 @@ export const Products = () => {
       filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(query.toLowerCase()) ||
         p.sku.toLowerCase().includes(query.toLowerCase()) ||
-        p.subcategory.toLowerCase().includes(query.toLowerCase())
+        (p.subcategory && p.subcategory.toLowerCase().includes(query.toLowerCase()))
       );
     }
 
@@ -93,7 +102,6 @@ export const Products = () => {
 
     try {
       setDeleting(true);
-      // Note: You may need to add deleteProduct to adminApi
       // await adminApi.deleteProduct(deleteTarget._id);
       toast.success('Product deleted successfully');
       setProducts(products.filter(p => p._id !== deleteTarget._id));
@@ -107,8 +115,6 @@ export const Products = () => {
       setDeleteTarget(null);
     }
   };
-
-  const categories = ['All', ...new Set(products.map(p => p.category))];
 
   return (
     <div className="space-y-6">
@@ -144,11 +150,10 @@ export const Products = () => {
               <button
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
-                className={`px-4 py-2 rounded-full font-medium transition ${
-                  selectedCategory === cat
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                className={`px-4 py-2 rounded-full font-medium transition ${selectedCategory === cat
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
               >
                 {cat}
               </button>
@@ -234,11 +239,10 @@ export const Products = () => {
                 {/* Status */}
                 <div className="mb-4">
                   <Badge
-                    className={`${
-                      product.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                    className={`${product.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
                   >
                     {product.isActive ? 'Active' : 'Inactive'}
                   </Badge>

@@ -1,46 +1,43 @@
 import User from "../models/User.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const signToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role, shopId: user.shopId },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-};
+import Shop from "../models/Shop.js";
 
 export const authController = {
-  // ✅ LOGIN (Admin: email + password) | (Shop: username + password)
+  // ✅ LOGIN (Admin: email + password) | (Shop: phone + password)
   login: async (req, res) => {
     try {
-      const { email, username, password } = req.body;
+      const { email, phone, password } = req.body;
 
-      if (!password || (!email && !username)) {
+      if (!password || (!email && !phone)) {
         return res
           .status(400)
-          .json({ message: "Email/Username and password are required" });
+          .json({ message: "Email/Phone and password are required" });
       }
 
-      const query = email ? { email } : { username };
+      // ✅ Find user by email or phone
+      const query = email ? { email } : { phone };
 
       const user = await User.findOne(query).select("+password");
-
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // ✅ Check active
       if (user.isActive === false) {
         return res.status(403).json({ message: "Account is inactive" });
       }
 
       const isPasswordValid = await bcryptjs.compare(password, user.password);
-
       if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = signToken(user);
+      const token = jwt.sign(
+        { id: user._id, role: user.role, shopId: user.shopId },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
 
       res.json({
         message: "Login successful",
@@ -50,96 +47,138 @@ export const authController = {
             name: user.name,
             email: user.email || null,
             phone: user.phone || null,
-            username: user.username || null,
             role: user.role,
             shopId: user.shopId,
-            isActive: user.isActive,
-            createdAt: user.createdAt
-          },
-          token
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
-
-  // ✅ CHECK IF ADMIN EXISTS
-  adminExists: async (req, res) => {
-    try {
-      const count = await User.countDocuments({ role: "admin" });
-
-      return res.json({
-        exists: count > 0
-      });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
-
-  // ✅ ADMIN REGISTER ONLY
-  registerAdmin: async (req, res) => {
-    try {
-      const { name, email, password, adminKey } = req.body;
-
-      if (!name || !email || !password) {
-        return res
-          .status(400)
-          .json({ message: "Name, email and password are required" });
-      }
-
-      const adminCount = await User.countDocuments({ role: "admin" });
-
-      if (adminCount > 0) {
-        const requiredKey = process.env.ADMIN_REGISTER_KEY;
-
-        if (requiredKey && adminKey !== requiredKey) {
-          return res
-            .status(403)
-            .json({ message: "Admin registration is disabled" });
-        }
-      }
-
-      const existingEmail = await User.findOne({ email });
-
-      if (existingEmail) {
-        return res.status(409).json({ message: "Email already registered" });
-      }
-
-      const hashedPassword = await bcryptjs.hash(password, 10);
-
-      const user = await User.create({
-        name,
-        email,
-        phone: null,
-        username: null,
-        password: hashedPassword,
-        role: "admin",
-        shopId: null,
-        isActive: true
-      });
-
-      const token = signToken(user);
-
-      res.status(201).json({
-        message: "Admin registration successful",
-        data: {
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            phone: null,
-            username: null,
-            role: user.role,
-            shopId: null,
             isActive: user.isActive
           },
           token
         }
       });
     } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // ✅ REGISTER (keep for admin use / optional)
+  register: async (req, res) => {
+    try {
+      const {
+        name,
+        email,
+        phone,
+        password,
+        role,
+        // shop-specific fields
+        location,
+        ownerName,
+        contactNo,
+        address,
+        isActive
+      } = req.body;
+
+      // ✅ allow (email OR phone) for register, but password + role + name required
+      if (!name || !password || !role || (!email && !phone)) {
+        return res
+          .status(400)
+          .json({ message: "Name, role, password and Email/Phone are required" });
+      }
+
+      // shop registration requires extra fields
+      let shopDoc = null;
+      if (role === "shop") {
+        if (!location || !ownerName || !contactNo || !address) {
+          return res
+            .status(400)
+            .json({ message: "All shop fields are required" });
+        }
+
+        // check duplicates for shop
+        const existingShopByEmail = await Shop.findOne({ email });
+        if (existingShopByEmail) {
+          return res.status(409).json({ message: "Shop with this email already exists" });
+        }
+        const existingShopByPhone = await Shop.findOne({ contactNo });
+        if (existingShopByPhone) {
+          return res
+            .status(409)
+            .json({ message: "Shop with this contact number already exists" });
+        }
+        // username uniqueness - using phone field for user
+        const existingUserByName = await User.findOne({ phone: name });
+        if (existingUserByName) {
+          return res
+            .status(409)
+            .json({ message: "Shop name already taken" });
+        }
+
+        shopDoc = await Shop.create({
+          name,
+          location,
+          ownerName,
+          contactNo,
+          email,
+          address,
+          isActive: isActive ?? true
+        });
+      }
+
+      // ✅ check duplicates for generic fields
+      if (email) {
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+          return res.status(409).json({ message: "Email already registered" });
+        }
+      }
+
+      if (phone) {
+        const existingPhone = await User.findOne({ phone });
+        if (existingPhone) {
+          return res.status(409).json({ message: "Phone already registered" });
+        }
+      }
+
+      const hashedPassword = await bcryptjs.hash(password, 10);
+
+      const userPayload = {
+        name,
+        email: email || null,
+        phone: phone || null,
+        password: hashedPassword,
+        role
+      };
+      if (shopDoc) {
+        userPayload.shopId = shopDoc._id;
+        userPayload.phone = name; // shop name used as username
+        userPayload.name = ownerName; // user name is owner name
+      }
+
+      const user = await User.create(userPayload);
+
+      const token = jwt.sign(
+        { id: user._id, role: user.role, shopId: user.shopId },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      res.status(201).json({
+        message: "Registration successful",
+        data: {
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email || null,
+            phone: user.phone || null,
+            role: user.role,
+            shopId: user.shopId,
+            isActive: user.isActive
+          },
+          token
+        }
+      });
+    } catch (error) {
+      // duplicate key error
       if (error.code === 11000) {
-        return res.status(409).json({ message: "Email already exists" });
+        return res.status(409).json({ message: "Email/Phone already exists" });
       }
       res.status(500).json({ message: error.message });
     }

@@ -13,7 +13,7 @@ export const Login = () => {
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,8 +28,11 @@ export const Login = () => {
       if (role === "admin") {
         setEmail("admin@kiran-dairy.com");
         setPassword("admin123");
+      } else if (role === "super-admin") {
+        setEmail("swaroopjadhav6161@gmail.com");
+        setPassword("Shree@45");
       } else {
-        setUsername("Kiran-Dairy-Mumbai");
+        setPhone("Kiran-Dairy-Mumbai"); // Shop name as username
         setPassword("demo123");
       }
     }
@@ -40,7 +43,7 @@ export const Login = () => {
   const handleBackToRoleSelect = () => {
     setSelectedRole(null);
     setEmail("");
-    setUsername("");
+    setPhone("");
     setPassword("");
     setError("");
     setShowPassword(false);
@@ -55,8 +58,8 @@ export const Login = () => {
 
     try {
       const response = await authApi.login({
-        email: selectedRole === "admin" ? email : undefined,
-        username: selectedRole === "shop" ? username : undefined,
+        email: selectedRole === "admin" || selectedRole === "super-admin" ? email : undefined,
+        phone: selectedRole === "shop" ? phone : undefined,
         password
       });
 
@@ -71,12 +74,19 @@ export const Login = () => {
         return;
       }
 
-      console.log("Login successful. User data:", user);
+      // Log the user data before storing (for debugging)
+      console.log('Login successful. User data:', user);
 
       login(user, token);
 
-      const dashboardRoute =
-        selectedRole === "admin" ? "/admin/dashboard" : "/shop/dashboard";
+      let dashboardRoute;
+      if (selectedRole === "super-admin") {
+        dashboardRoute = "/super-admin/dashboard";
+      } else if (selectedRole === "admin") {
+        dashboardRoute = "/admin/dashboard";
+      } else {
+        dashboardRoute = "/shop/dashboard";
+      }
 
       toast.success(
         `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} login successful!`
@@ -91,6 +101,7 @@ export const Login = () => {
     }
   };
 
+  // Role Selection View
   if (!selectedRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -102,10 +113,17 @@ export const Login = () => {
 
           <div className="space-y-3">
             <button
+              onClick={() => handleRoleSelect("super-admin")}
+              className="w-full text-center bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-semibold"
+            >
+              <span className="block">👑 Login as Super Admin</span>
+            </button>
+
+            <button
               onClick={() => handleRoleSelect("admin")}
               className="w-full text-center bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
             >
-              <span className="block"> Login as Admin</span>
+              <span className="block">▲ Login as Admin</span>
             </button>
 
             <button
@@ -115,17 +133,31 @@ export const Login = () => {
               <span className="block">Login as Shop</span>
             </button>
           </div>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => navigate("/register")}
+              className="text-sm text-gray-600 hover:underline"
+            >
+              Don't have an account? Create one
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  const textColor = selectedRole === "admin" ? "blue" : "green";
-  const bgColor = selectedRole === "admin" ? "bg-blue-50" : "bg-green-50";
-  const buttonColor =
-    selectedRole === "admin"
-      ? "bg-blue-600 hover:bg-blue-700"
-      : "bg-green-600 hover:bg-green-700";
+  // Login Form View
+  const getColorScheme = () => {
+    if (selectedRole === "super-admin") return { text: "purple", bg: "bg-purple-50", button: "bg-purple-600 hover:bg-purple-700" };
+    if (selectedRole === "admin") return { text: "blue", bg: "bg-blue-50", button: "bg-blue-600 hover:bg-blue-700" };
+    return { text: "green", bg: "bg-green-50", button: "bg-green-600 hover:bg-green-700" };
+  };
+
+  const colors = getColorScheme();
+  const textColor = colors.text;
+  const bgColor = colors.bg;
+  const buttonColor = colors.button;
 
   return (
     <div className={`flex items-center justify-center min-h-screen ${bgColor}`}>
@@ -140,7 +172,7 @@ export const Login = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {selectedRole === "admin" ? (
+          {selectedRole === "admin" || selectedRole === "super-admin" ? (
             <Input
               label="Email"
               type="email"
@@ -155,8 +187,8 @@ export const Login = () => {
               label="Shop Name (Username)"
               type="text"
               placeholder="Enter shop name"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
               disabled={loading}
             />
@@ -196,6 +228,15 @@ export const Login = () => {
             disabled={loading}
           >
             ← Back to role selection
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            className="w-full text-center py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition"
+            disabled={loading}
+          >
+            ← Create new account
           </button>
         </div>
       </Card>

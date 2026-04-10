@@ -31,16 +31,9 @@ export const ProductDetail = () => {
   const [updating, setUpdating] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const categories = [
-    'Liquid Milk',
-    'Fermented Products',
-    'Fat-rich Products',
-    'Cheese & Paneer',
-    'Sweet Products',
-    'Frozen Dairy',
-    'Powdered Dairy',
-    'Value-added / Flavored'
-  ];
+  const [categories, setCategories] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [fetchingOptions, setFetchingOptions] = useState(true);
 
   // Get server base URL for images
   const getServerBase = () => {
@@ -58,15 +51,25 @@ export const ProductDetail = () => {
     return null;
   };
 
-  // Fetch product details
+  // Fetch product, categories and units
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        // Note: You may need to add getProduct by ID to adminApi
-        // For now, fetch all and find the one we need
-        const response = await adminApi.getAllProducts();
-        const product = response.data?.data?.find(p => p._id === productId);
+        setFetchingOptions(true);
+
+        const [prodRes, catRes, unitRes] = await Promise.all([
+          adminApi.getAllProducts(),
+          adminApi.getCategories(),
+          adminApi.getUnits()
+        ]);
+
+        const cats = catRes.data?.data || [];
+        const uns = unitRes.data?.data || [];
+        setCategories(cats);
+        setUnits(uns);
+
+        const product = prodRes.data?.data?.find(p => p._id === productId);
 
         if (!product) {
           toast.error('Product not found');
@@ -92,16 +95,17 @@ export const ProductDetail = () => {
         });
         setOriginalData(product);
       } catch (error) {
-        console.error('Failed to fetch product:', error);
+        console.error('Failed to fetch product data:', error);
         toast.error('Failed to load product details');
         navigate('/admin/products');
       } finally {
         setLoading(false);
+        setFetchingOptions(false);
       }
     };
 
     if (productId) {
-      fetchProduct();
+      fetchData();
     }
   }, [productId, navigate]);
 
@@ -406,11 +410,17 @@ export const ProductDetail = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  disabled={fetchingOptions}
                 >
-                  <option value="liter">Liter</option>
-                  <option value="kg">Kilogram</option>
-                  <option value="piece">Piece</option>
-                  <option value="dozen">Dozen</option>
+                  {fetchingOptions ? (
+                    <option>Loading units...</option>
+                  ) : (
+                    units.map(unit => (
+                      <option key={unit._id} value={unit.name}>
+                        {unit.name} ({unit.shortName})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
@@ -427,12 +437,17 @@ export const ProductDetail = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  disabled={fetchingOptions}
                 >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
+                  {fetchingOptions ? (
+                    <option>Loading categories...</option>
+                  ) : (
+                    categories.map(cat => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

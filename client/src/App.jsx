@@ -1,16 +1,14 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
 // Auth Pages
 import { Login } from "./pages/auth/Login.jsx";
-import { AdminRegister } from "./pages/auth/AdminRegister.jsx";
-import { SetupRedirect } from "./pages/auth/SetupRedirect.jsx";
-import { Logout } from "./pages/auth/Logout.jsx";
+import { Register } from "./pages/auth/Register.jsx";
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard.jsx";
-import { AdminProfile } from "./pages/admin/AdminProfile.jsx";
+import { SuperAdminDashboard } from "./pages/admin/SuperAdminDashboard.jsx";
 import { BatchDispatch } from "./pages/admin/BatchDispatch.jsx";
 import { DispatchHistory } from "./pages/admin/DispatchHistory.jsx";
 import { DispatchAnalytics } from "./pages/admin/DispatchAnalytics.jsx";
@@ -42,28 +40,41 @@ import { AdminLayout } from "./layouts/AdminLayout.jsx";
 import { ShopLayout } from "./layouts/ShopLayout.jsx";
 
 import "./index.css";
-import "./App.css";
 
 function App() {
   return (
     <AuthProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        {/* Global Toast Notifications */}
         <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
-            style: { fontSize: "14px" },
+            style: {
+              fontSize: "14px",
+            },
           }}
         />
 
         <Routes>
-          {/* ✅ Root -> checks admin exists -> redirects to /admin/register or /login */}
-          <Route path="/" element={<SetupRedirect />} />
+          {/* Root -> Login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/admin/register" element={<AdminRegister />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Super Admin */}
+          <Route
+            path="/super-admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["super-admin"]}>
+                <AdminLayout>
+                  <SuperAdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin */}
           <Route
@@ -72,16 +83,6 @@ function App() {
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout>
                   <AdminDashboard />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/profile"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminLayout>
-                  <AdminProfile />
                 </AdminLayout>
               </ProtectedRoute>
             }
@@ -309,39 +310,28 @@ function App() {
             }
           />
 
-          {/* Unauthorized */}
           <Route
-            path="/unauthorized"
-            element={
-              <div className="app-page">
-                <div className="app-card">
-                  <h2 className="app-title">Unauthorized</h2>
-                  <p className="app-subtitle">You don’t have access to this page.</p>
-                  <button className="app-btn" onClick={() => window.history.back()}>
-                    Go Back
-                  </button>
+          path="/unauthorized"
+          element={
+          <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+            <div className="bg-white border rounded-xl p-8 text-center max-w-md w-full">
+              <h2 className="text-xl font-bold mb-2">Unauthorized</h2>
+              <p className="text-gray-600 mb-4">You don’t have access to this page.</p>
+              <button
+              onClick={() => window.history.back()}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Go Back
+                </button>
                 </div>
-              </div>
-            }
-          />
-
+                </div>
+              }
+              />
+          
           {/* 404 */}
           <Route
             path="*"
-            element={
-              <div className="app-page">
-                <div className="app-card">
-                  <h2 className="app-title">404 - Page Not Found</h2>
-                  <p className="app-subtitle">The page you are looking for does not exist.</p>
-                  <button
-                    className="app-btn"
-                    onClick={() => (window.location.href = "/login")}
-                  >
-                    Go to Login
-                  </button>
-                </div>
-              </div>
-            }
+            element={<div className="p-6 text-center">404 - Page Not Found</div>}
           />
         </Routes>
       </Router>

@@ -1,8 +1,10 @@
-// src/config/db.js
-import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const connectDB = async () => {
   const uri = process.env.MONGODB_URI;

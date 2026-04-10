@@ -13,6 +13,7 @@ import ledgerRoutes from './routes/ledgerRoutes.js';
 import staffRoutes from './routes/staffRoutes.js';
 import staffPaymentRoutes from './routes/staffPaymentRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import superAdminRoutes from './routes/superAdminRoutes.js';
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/uploads', express.static(path.join(__dirname,"..", "public")));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/dispatch', dispatchRoutes);
 app.use('/api/sales', salesRoutes);

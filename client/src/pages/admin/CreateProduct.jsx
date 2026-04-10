@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FaArrowLeft, FaUpload, FaImage } from 'react-icons/fa';
@@ -15,8 +15,8 @@ export const CreateProduct = () => {
     sku: '',
     description: '',
     price: '',
-    unit: 'liter',
-    category: 'Liquid Milk',
+    unit: '',
+    category: '',
     subcategory: '',
     imageUrl: '',
     isActive: true
@@ -27,16 +27,41 @@ export const CreateProduct = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const categories = [
-    'Liquid Milk',
-    'Fermented Products',
-    'Fat-rich Products',
-    'Cheese & Paneer',
-    'Sweet Products',
-    'Frozen Dairy',
-    'Powdered Dairy',
-    'Value-added / Flavored'
-  ];
+  const [categories, setCategories] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [fetchingOptions, setFetchingOptions] = useState(true);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setFetchingOptions(true);
+        const [catRes, unitRes] = await Promise.all([
+          adminApi.getCategories(),
+          adminApi.getUnits()
+        ]);
+
+        const cats = catRes.data.data || [];
+        const uns = unitRes.data.data || [];
+
+        setCategories(cats);
+        setUnits(uns);
+
+        // Set default values if available
+        setFormData(prev => ({
+          ...prev,
+          category: cats.length > 0 ? cats[0].name : '',
+          unit: uns.length > 0 ? uns[0].name : ''
+        }));
+      } catch (error) {
+        console.error('Failed to fetch product options:', error);
+        toast.error('Failed to load categories and units');
+      } finally {
+        setFetchingOptions(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -298,11 +323,17 @@ export const CreateProduct = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  disabled={fetchingOptions}
                 >
-                  <option value="liter">Liter</option>
-                  <option value="kg">Kilogram</option>
-                  <option value="piece">Piece</option>
-                  <option value="dozen">Dozen</option>
+                  {fetchingOptions ? (
+                    <option>Loading units...</option>
+                  ) : (
+                    units.map(unit => (
+                      <option key={unit._id} value={unit.name}>
+                        {unit.name} ({unit.shortName})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
@@ -319,12 +350,19 @@ export const CreateProduct = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  disabled={fetchingOptions}
                 >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
+                  {fetchingOptions ? (
+                    <option>Loading categories...</option>
+                  ) : categories.length > 0 ? (
+                    categories.map(cat => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No categories available</option>
+                  )}
                 </select>
               </div>
 

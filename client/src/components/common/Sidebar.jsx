@@ -40,6 +40,7 @@ export const Sidebar = () => {
   const [alertCount, setAlertCount] = useState(0);
 
   const isAdmin = user?.role === "admin";
+  const isSuperAdmin = user?.role === "super-admin";
   const isShop = user?.role === "shop";
 
   useEffect(() => {
@@ -105,6 +106,18 @@ export const Sidebar = () => {
   return (
     <aside className="bg-white w-64 border-r min-h-screen p-4">
       <h2 className="text-lg font-bold mb-4 text-gray-900">Menu</h2>
+
+      {isSuperAdmin && (
+        <div className="space-y-2">
+          <NavLink to="/super-admin/dashboard" className={linkClass}>
+            <div className="flex items-center gap-3">
+              <FaHome className="w-4 h-4" />
+              <span>Dashboard</span>
+            </div>
+          </NavLink>
+          <hr className="my-3" />
+        </div>
+      )}
 
       {isAdmin && (
         <div className="space-y-2">
