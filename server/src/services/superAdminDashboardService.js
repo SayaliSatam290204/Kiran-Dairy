@@ -160,29 +160,18 @@ export const getSuperAdminDashboard = async () => {
   }
 };
 
-// Get detailed branch report
 export const getBranchReport = async (shopId) => {
   try {
     const shop = await Shop.findById(shopId);
     if (!shop) throw new Error("Shop not found");
 
-    const sales = await Sale.find({ shopId })
-      .populate("staffId", "name")
-      .populate("items.productId", "name price");
-    
-    const inventory = await Inventory.find({ shopId })
-      .populate("productId", "name price category");
-    
-    const staff = await Staff.find({ shopId, isActive: true });
-    
-    const dispatches = await Dispatch.find({ shopId }).catch(() => []);
-    
-    const returns = await Return.find({ shopId });
+    const sales = await Sale.find({ shopId }).lean();
+    const inventory = await Inventory.find({ shopId }).lean();
+    const staff = await Staff.find({ shopId, isActive: true }).lean();
+    const returns = await Return.find({ shopId }).lean();
 
     const totalRevenue = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
-    const expectedRevenue = inventory.reduce((sum, inv) => {
-      return sum + ((inv.productId?.price || 0) * inv.quantity);
-    }, 0);
+    const expectedRevenue = 0;
 
     return {
       branch: shop,
@@ -192,7 +181,7 @@ export const getBranchReport = async (shopId) => {
       revenueDifference: expectedRevenue - totalRevenue,
       inventory,
       staff,
-      dispatches,
+      dispatches: [],
       returns: returns.length,
       returnValue: returns.reduce((sum, r) => sum + (r.totalRefund || 0), 0)
     };
@@ -202,19 +191,17 @@ export const getBranchReport = async (shopId) => {
   }
 };
 
-// Get revenue trends
 export const getRevenueTrends = async (startDate, endDate) => {
   try {
     const sales = await Sale.find({
       createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
     })
-      .populate("shopId", "name")
       .lean();
 
-    const shops = await Shop.find({ isActive: true });
+    const shops = await Shop.find({ isActive: true }).lean();
 
     const trends = shops.map(shop => {
-      const shopSales = sales.filter(s => s.shopId._id.toString() === shop._id.toString());
+      const shopSales = sales.filter(s => s.shopId.toString() === shop._id.toString());
       const revenue = shopSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
       return {
         shopName: shop.name,
