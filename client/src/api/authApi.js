@@ -6,6 +6,7 @@ const API = axios.create({
 
 export const authApi = {
   login: (payload) => API.post("/auth/login", payload),
+  register: (payload) => API.post("/auth/register", payload),
   registerAdmin: (payload) => API.post("/auth/admin/register", payload),
   adminExists: () => API.get("/auth/admin/exists")
 };

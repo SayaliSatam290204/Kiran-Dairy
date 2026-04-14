@@ -3,7 +3,10 @@ import { authController } from "../controllers/authController.js";
 
 const router = express.Router();
 
-// ✅ NEW: Admin Registration
+// Public registration (admin / shop from Register.jsx)
+router.post("/register", authController.register);
+
+// Admin Registration (AdminRegister.jsx)
 router.post("/admin/register", authController.registerAdmin);
 
 // ✅ Check if admin exists (for registration flow)
